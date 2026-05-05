@@ -24,3 +24,7 @@ dependencyResolutionManagement {
 
 rootProject.name = "HAcompanion"
 include(":app")
+include(":core-network")
+include(":data")
+include(":feature-tasks")
+include(":feature-shopping")
