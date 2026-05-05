@@ -4,12 +4,12 @@ plugins {
 }
 
 android {
+    val haBaseUrl: String = project.findProperty("HA_BASE_URL") as String? ?: ""
+    val haToken: String = project.findProperty("HA_TOKEN") as String? ?: ""
+
     namespace = "com.powakaz.hacompanion"
-    compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
-    }
+    compileSdk = 36
+
 
     defaultConfig {
         applicationId = "com.powakaz.hacompanion"
@@ -19,6 +19,9 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("String", "HA_BASE_URL", "\"$haBaseUrl\"")
+        buildConfigField("String", "HA_TOKEN", "\"$haToken\"")
     }
 
     buildTypes {
@@ -36,10 +39,17 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
+
     }
 }
 
 dependencies {
+    implementation(project(":core-network"))
+    implementation(project(":data"))
+    implementation(project(":feature-shopping"))
+    implementation(project(":feature-tasks"))
+
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.material3)
