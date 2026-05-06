@@ -1,5 +1,6 @@
 package com.powakaz.core_network.factory
 
+import com.powakaz.core_network.interceptor.AuthInterceptor
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import java.util.concurrent.TimeUnit
