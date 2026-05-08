@@ -17,7 +17,7 @@ import com.powakaz.core_network.factory.RetrofitFactory
 import com.powakaz.core_network.interceptor.AuthInterceptor
 import com.powakaz.core_network.model.NetworkResult
 import com.powakaz.core_network.utils.safeApiCall
-import com.powakaz.feature_tasks.data.remote.HomeAssistantToDoListApi
+import com.powakaz.feature_tasks.data.remote.NetworkTodoListApi
 import com.powakaz.feature_tasks.data.remote.model.TodoRequest
 import com.powakaz.hacompanion.ui.theme.HAcompanionTheme
 import kotlinx.coroutines.launch
@@ -45,7 +45,7 @@ class MainActivity : ComponentActivity() {
         val okHttpClient = NetworkFactory.createOkHttpClient(authInterceptor)
 
         val retrofit = RetrofitFactory.createRetrofit(baseUrl, okHttpClient)
-        val api = RetrofitFactory.createApi<HomeAssistantToDoListApi>(retrofit)
+        val api = RetrofitFactory.createApi<NetworkTodoListApi>(retrofit)
 
         lifecycleScope.launch {
             val result = safeApiCall { api.getTodoItems(TodoRequest("todo.moi_dela")) }
