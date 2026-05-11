@@ -60,6 +60,7 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.retrofit.serialization)
+    implementation(libs.lifecycle.viewmodel)
 
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
