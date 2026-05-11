@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.android.library)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
@@ -23,8 +24,10 @@ android {
 
 dependencies {
     implementation(project(":core-network"))
+    implementation(libs.androidx.activity.ktx)
 
     implementation(libs.androidx.appcompat)
+    implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.core.ktx)
     implementation(libs.material)
     testImplementation(libs.junit)
@@ -33,5 +36,8 @@ dependencies {
 
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.retrofit)
+
+    implementation(libs.retrofit.serialization)
+    implementation(libs.okhttp)
 
 }

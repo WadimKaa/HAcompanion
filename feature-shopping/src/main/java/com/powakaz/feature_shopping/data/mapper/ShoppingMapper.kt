@@ -7,6 +7,6 @@ fun ShoppingItemDto.toDomain(): ShoppingItem {
     return ShoppingItem(
         id = this.id,
         name = this.name,
-        isCompleted = this.status == "completed" //если = комплит вернет тру
+        isCompleted = this.status != "needs_action" //если != "needs_action", значит задача выполнена
     )
 }
