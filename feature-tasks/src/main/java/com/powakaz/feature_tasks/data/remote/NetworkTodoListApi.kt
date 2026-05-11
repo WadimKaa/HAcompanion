@@ -1,6 +1,5 @@
 package com.powakaz.feature_tasks.data.remote
 
-import com.powakaz.feature_tasks.data.remote.model.TodoItemDto
 import com.powakaz.feature_tasks.data.remote.model.TodoRequest
 import retrofit2.http.Body
 import retrofit2.http.POST
