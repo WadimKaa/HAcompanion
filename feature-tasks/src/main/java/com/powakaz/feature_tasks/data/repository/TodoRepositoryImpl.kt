@@ -2,6 +2,7 @@ package com.powakaz.feature_tasks.data.repository
 
 import com.powakaz.core_network.model.NetworkResult
 import com.powakaz.core_network.utils.safeApiCall
+import com.powakaz.feature_tasks.data.mapper.toDomain
 import com.powakaz.feature_tasks.data.remote.NetworkTodoListApi
 import com.powakaz.feature_tasks.data.remote.model.TodoRequest
 import com.powakaz.feature_tasks.domain.model.TodoItem
@@ -15,13 +16,8 @@ class TodoRepositoryImpl @Inject constructor (private val api : NetworkTodoListA
         return safeApiCall {
             val response = api.getTodoItems(TodoRequest(entityId))
 
-
-            response.map { dto ->
-                TodoItem(
-                    id = dto.id,
-                    title = dto.title,
-                    isCompleted = dto.isCompleted
-                )
+            response.serviceResponseDto.myTasksDto.items.map {
+                it.toDomain()
             }
         }
 
