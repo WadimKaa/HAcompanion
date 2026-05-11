@@ -9,6 +9,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
+import com.powakaz.feature_tasks.BuildConfig
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -18,9 +19,9 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideApi() : NetworkTodoListApi{
-        val authInterceptor = AuthInterceptor("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJjZDllNzA0NTFkYjU0MGJjOTJkMDViY2FjYjI2YmIwMyIsImlhdCI6MTc3NzkwMzQyNSwiZXhwIjoyMDkzMjYzNDI1fQ.tTdwBmmGl2JS5WFq_XHdaE7oJMwGxBDluSjZfgfLHqI")
+        val authInterceptor = AuthInterceptor(BuildConfig.AUTH_TOKEN)
         val okhttpClient = NetworkFactory.createOkHttpClient(authInterceptor)
-        val retrofitClient = RetrofitFactory.createRetrofit("http://192.168.0.11:8123/", okhttpClient)
+        val retrofitClient = RetrofitFactory.createRetrofit(BuildConfig.BASE_URL, okhttpClient)
 
 
         return RetrofitFactory.createApi(retrofitClient)
