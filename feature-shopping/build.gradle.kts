@@ -6,6 +6,7 @@ plugins {
 }
 
 android {
+
     namespace = "com.powakaz.feature_shopping"
     compileSdk {
         version = release(36)
@@ -16,12 +17,17 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
+
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
 
+    buildFeatures {
+        buildConfig = true
+
+    }
 }
 
 dependencies {
