@@ -3,6 +3,7 @@ package com.powakaz.feature_tasks.data.remote
 import com.powakaz.feature_tasks.data.remote.model.AddItemBody
 import com.powakaz.feature_tasks.data.remote.model.TodoItemsResponseDto
 import com.powakaz.feature_tasks.data.remote.model.GetItemsBody
+import com.powakaz.feature_tasks.data.remote.model.ResponseDto
 import retrofit2.http.Body
 import retrofit2.http.POST
 
@@ -15,7 +16,8 @@ interface NetworkTodoListApi {
     ): TodoItemsResponseDto
 
 
-
     @POST("api/services/todo/add_item")
-    suspend fun addTodoItem(@Body addItemBody: AddItemBody)
+    suspend fun addTodoItem(
+        @Body addItemBody: AddItemBody
+    ): ResponseDto
 }
