@@ -16,6 +16,7 @@ serialization = "1.6.3"
 retrofitSerialization = "0.8.0"
 coroutines = "1.8.0"
 hilt = "2.59.2"
+hilt-nav = "1.2.0"
 ksp = "2.1.10-1.0.30"
 
 [libraries]
@@ -49,6 +50,7 @@ coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-
 hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt" }
 hilt-compiler = { group = "com.google.dagger", name = "hilt-android-compiler", version.ref = "hilt" }
 lifecycle-viewmodel = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "lifecycleRuntimeKtx" }
+hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hilt-nav" }
 
 
 [plugins]
