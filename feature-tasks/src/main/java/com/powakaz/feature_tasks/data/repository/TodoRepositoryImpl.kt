@@ -29,7 +29,7 @@ class TodoRepositoryImpl @Inject constructor(private val api: NetworkTodoListApi
     override suspend fun addTodoItem(entityName: String, listName: String) : NetworkResult<Response> {
         return safeApiCall {
             val response = api.addTodoItem(AddItemBody(entityName, listName))
-
+            response.toDomain()
         }
     }
 }
