@@ -20,7 +20,7 @@ class TodoListViewModel @Inject constructor(private val todoItemsUseCase: GetTod
 
 
     init {
-        loadTodos("")
+        loadTodos("todo.moi_dela")
     }
 
 
