@@ -1,3 +1,5 @@
+import org.gradle.kotlin.dsl.java
+
 import java.util.Properties
 
 plugins {
@@ -9,8 +11,15 @@ plugins {
 
 android {
 
-    val haBaseUrl: String = project.findProperty("HA_BASE_URL") as String? ?: ""
-    val haToken: String = project.findProperty("HA_TOKEN") as String? ?: ""
+    val localProperties = Properties().apply {
+        val file = rootProject.file("local.properties")
+        if (file.exists()) {
+            load(file.inputStream())
+        }
+    }
+
+    val haBaseUrl: String = localProperties.getProperty("HA_BASE_URL") as String? ?: ""
+    val haToken: String = localProperties.getProperty("HA_TOKEN") as String? ?: ""
 
 
     namespace = "com.powakaz.core_network"

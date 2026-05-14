@@ -3,9 +3,13 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
+    alias(libs.plugins.kotlin.compose)
+
 }
 
 android {
+
+
 
     namespace = "com.powakaz.feature_shopping"
     compileSdk {
@@ -26,6 +30,7 @@ android {
 
     buildFeatures {
         buildConfig = true
+        compose = true
 
     }
 }
@@ -34,6 +39,7 @@ dependencies {
     implementation(project(":core-network"))
 
     implementation(libs.androidx.appcompat)
+    implementation(libs.androidx.compose.foundation.layout)
     implementation(libs.androidx.core.ktx)
     implementation(libs.material)
     testImplementation(libs.junit)
@@ -49,5 +55,14 @@ dependencies {
     // Hilt
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
+
+
+    val composeBom = platform(libs.androidx.compose.bom)
+    implementation(composeBom)
+    implementation(libs.androidx.compose.ui)
+    implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.compose.ui.tooling.preview)
+    implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.lifecycle.runtime.ktx)
 
 }

@@ -17,6 +17,7 @@ retrofitSerialization = "0.8.0"
 coroutines = "1.8.0"
 hilt = "2.59.2"
 ksp = "2.1.10-1.0.30"
+foundationLayout = "1.11.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -48,6 +49,7 @@ coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-
 
 hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt" }
 hilt-compiler = { group = "com.google.dagger", name = "hilt-android-compiler", version.ref = "hilt" }
+androidx-compose-foundation-layout = { group = "androidx.compose.foundation", name = "foundation-layout", version.ref = "foundationLayout" }
 
 
 [plugins]

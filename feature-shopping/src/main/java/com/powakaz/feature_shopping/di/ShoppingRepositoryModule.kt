@@ -9,11 +9,11 @@ import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
 
-@Module
-@InstallIn(SingletonComponent::class)
+//@Module
+//@InstallIn(SingletonComponent::class)
 abstract class ShoppingRepositoryModule {
 
-    @Binds
-    @Singleton
-    abstract fun bindShoppingRepository(shoppingRepositoryImpl: ShoppingRepositoryImpl): ShoppingRepository
+    //@Binds
+    //@Singleton
+    //abstract fun bindShoppingRepository(shoppingRepositoryImpl: ShoppingRepositoryImpl): ShoppingRepository
 }
