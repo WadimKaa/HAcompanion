@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -15,9 +16,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.powakaz.feature_tasks.presentation.todo_list.TodoListScreen
+import com.powakaz.feature_tasks.presentation.todo_list.createNewTodoItem
 import com.powakaz.hacompanion.ui.theme.HAcompanionTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -29,12 +32,15 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             HAcompanionTheme {
-                TodoListScreen()
+                createNewTodoItem()
             }
         }
 
     }
 }
+
+
+
 
 
 @Composable
