@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="create_task">Create task</string>
+    <string name="create_new_task_head">Добавьте новое дело</string>
+    <string name="create_task_text">Введите название дела, чтобы добавить его в список</string>
 </resources>

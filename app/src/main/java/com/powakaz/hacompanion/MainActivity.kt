@@ -20,7 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.powakaz.feature_tasks.presentation.todo_list.TodoListScreen
-import com.powakaz.feature_tasks.presentation.todo_list.createNewTodoItem
+import com.powakaz.feature_tasks.presentation.todo_list.TaskCreateScreen
 import com.powakaz.hacompanion.ui.theme.HAcompanionTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -32,7 +32,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             HAcompanionTheme {
-                createNewTodoItem()
+                TaskCreateScreen()
             }
         }
 
