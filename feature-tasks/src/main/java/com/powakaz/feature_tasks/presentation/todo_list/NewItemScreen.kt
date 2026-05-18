@@ -1,5 +1,7 @@
 package com.powakaz.feature_tasks.presentation.todo_list
 
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Box
@@ -7,9 +9,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -37,6 +41,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -56,6 +61,21 @@ fun TaskCreateScreen() {
 
     var taskName by remember { mutableStateOf("") }
 
+    var isFocused by remember { mutableStateOf(false) }
+    val isLabelUp = isFocused || taskName.isNotEmpty()
+
+
+    val labelOffsetY by animateDpAsState(
+        targetValue = if (isLabelUp) 0.dp else 40.dp // 0 - над полем, 40 - внутри поля
+    )
+    val labelOffsetX by animateDpAsState(
+        targetValue = if (isLabelUp) 24.dp else 36.dp // 0 - над полем, 40 - внутри поля
+    )
+    val labelFontSize by animateFloatAsState(
+        targetValue = if (isLabelUp) 12f else 16f
+    )
+
+
     Scaffold(
         topBar = {
             CreateTopBar(stringResource(R.string.create_task))
@@ -67,7 +87,11 @@ fun TaskCreateScreen() {
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            Column(modifier = Modifier.align(alignment = Alignment.Center)) {
+            Column(
+                modifier = Modifier
+                    .align(alignment = Alignment.Center)
+                    .padding(bottom = 98.dp)
+            ) {
                 Image(
                     painter = painterResource(R.drawable.create_task_main_draw),
                     contentDescription = null,
@@ -92,25 +116,32 @@ fun TaskCreateScreen() {
                     fontSize = 16.sp,
                     textAlign = TextAlign.Center
                 )
-                OutlinedTextField(
-                    value = taskName,
-                    onValueChange = { newText ->
-                        taskName = newText
 
-                    },
-                    placeholder = {
-                        Text("Название дела")
-                    },
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color(0xFF6a50f1)
-                    ),
-                    shape = RoundedCornerShape(12.dp),
-                    singleLine = true,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
-                )
+                Box() {
+                    OutlinedTextField(
+                        value = taskName,
+                        onValueChange = {
+                            taskName = it
+                        },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color(0xFF6a50f1)
+                        ),
+                        shape = RoundedCornerShape(12.dp),
+                        singleLine = true,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 16.dp, end = 16.dp, top = 24.dp)
+                            .onFocusChanged {
+                                isFocused = it.isFocused
+                            }
+                    )
+                    Text(
+                        text = "Название дела",
+                        fontSize = labelFontSize.sp,
+                        modifier = Modifier.offset(x = labelOffsetX, y = labelOffsetY)
+                    )
 
+                }
 
             }
             Button(
