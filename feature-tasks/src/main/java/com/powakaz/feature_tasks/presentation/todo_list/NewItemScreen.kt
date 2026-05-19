@@ -40,6 +40,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
@@ -60,9 +61,11 @@ import com.powakaz.feature_tasks.R
 fun TaskCreateScreen() {
 
     var taskName by remember { mutableStateOf("") }
-
     var isFocused by remember { mutableStateOf(false) }
+    var wasFocusedOnce by remember { mutableStateOf(false) }
+
     val isLabelUp = isFocused || taskName.isNotEmpty()
+    var isTextCounterVisible = wasFocusedOnce
 
 
     val labelOffsetY by animateDpAsState(
@@ -130,9 +133,13 @@ fun TaskCreateScreen() {
                         singleLine = true,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(start = 16.dp, end = 16.dp, top = 24.dp)
+                            .padding(start = 16.dp, end = 16.dp, top = 24.dp, bottom = 24.dp)
                             .onFocusChanged {
                                 isFocused = it.isFocused
+
+                                if (it.isFocused && !wasFocusedOnce){
+                                    wasFocusedOnce = true
+                                }
                             }
                     )
                     Text(
@@ -140,6 +147,14 @@ fun TaskCreateScreen() {
                         fontSize = labelFontSize.sp,
                         modifier = Modifier.offset(x = labelOffsetX, y = labelOffsetY)
                     )
+                    if (isTextCounterVisible) {
+                        Text(
+                            text = "${taskName.length}/100",
+                            modifier = Modifier
+                                .align(Alignment.BottomEnd)
+                                .padding(end = 16.dp)
+                        )
+                    }
 
                 }
 
@@ -148,10 +163,12 @@ fun TaskCreateScreen() {
                 onClick = {
 
                 },
+                enabled = taskName.isNotEmpty(),
                 colors = ButtonDefaults.buttonColors(
                     contentColor = Color(0xFFFFFFFF),
                     containerColor = Color(0xFF6a50f1),
-                    disabledContainerColor = Color(0xFFEBE5FC)
+                    disabledContainerColor = Color(0xFFEBE5FC),
+                    disabledContentColor = Color(0xFFFFFFFF),
                 ),
                 shape = RoundedCornerShape(16.dp),
                 modifier = Modifier
@@ -159,6 +176,7 @@ fun TaskCreateScreen() {
                     .padding(start = 16.dp, end = 16.dp, bottom = 24.dp)
                     .fillMaxWidth()
                     .height(56.dp)
+
 
             ) {
                 Text(
