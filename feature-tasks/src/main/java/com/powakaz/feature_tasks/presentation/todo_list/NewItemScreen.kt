@@ -1,11 +1,17 @@
 package com.powakaz.feature_tasks.presentation.todo_list
 
+import android.R.attr.onClick
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.scrollable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -44,6 +50,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -60,16 +67,20 @@ import com.powakaz.feature_tasks.R
 @Composable
 fun TaskCreateScreen() {
 
+    val MAX_LETTER_COUNT = 100
+
     var taskName by remember { mutableStateOf("") }
     var isFocused by remember { mutableStateOf(false) }
     var wasFocusedOnce by remember { mutableStateOf(false) }
 
     val isLabelUp = isFocused || taskName.isNotEmpty()
     var isTextCounterVisible = wasFocusedOnce
+    var isHeadVisible = !wasFocusedOnce
+    var isError = taskName.length > MAX_LETTER_COUNT
 
 
     val labelOffsetY by animateDpAsState(
-        targetValue = if (isLabelUp) 0.dp else 40.dp // 0 - над полем, 40 - внутри поля
+        targetValue = if (isLabelUp) 0.dp else 42.dp // 0 - над полем, 40 - внутри поля
     )
     val labelOffsetX by animateDpAsState(
         targetValue = if (isLabelUp) 24.dp else 36.dp // 0 - над полем, 40 - внутри поля
@@ -95,31 +106,34 @@ fun TaskCreateScreen() {
                     .align(alignment = Alignment.Center)
                     .padding(bottom = 98.dp)
             ) {
-                Image(
-                    painter = painterResource(R.drawable.create_task_main_draw),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(height = 156.dp, width = 156.dp)
-                        .align(Alignment.CenterHorizontally)
-                )
-                Text(
-                    text = stringResource(R.string.create_new_task_head),
-                    modifier = Modifier
-                        .align(Alignment.CenterHorizontally)
-                        .padding(bottom = 8.dp),
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 20.sp
-                )
-                Text(
-                    text = stringResource(R.string.create_task_text),
-                    modifier = Modifier
-                        .align(Alignment.CenterHorizontally)
-                        .padding(start = 32.dp, end = 32.dp, bottom = 32.dp),
-                    fontWeight = FontWeight.Normal,
-                    fontSize = 16.sp,
-                    textAlign = TextAlign.Center
-                )
-
+                AnimatedVisibility(visible = isHeadVisible) {
+                    Column() {
+                        Image(
+                            painter = painterResource(R.drawable.create_task_main_draw),
+                            contentDescription = null,
+                            modifier = Modifier
+                                .size(height = 156.dp, width = 156.dp)
+                                .align(Alignment.CenterHorizontally)
+                        )
+                        Text(
+                            text = stringResource(R.string.create_new_task_head),
+                            modifier = Modifier
+                                .align(Alignment.CenterHorizontally)
+                                .padding(bottom = 8.dp),
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 20.sp
+                        )
+                        Text(
+                            text = stringResource(R.string.create_task_text),
+                            modifier = Modifier
+                                .align(Alignment.CenterHorizontally)
+                                .padding(start = 32.dp, end = 32.dp, bottom = 32.dp),
+                            fontWeight = FontWeight.Normal,
+                            fontSize = 16.sp,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
                 Box() {
                     OutlinedTextField(
                         value = taskName,
@@ -127,7 +141,11 @@ fun TaskCreateScreen() {
                             taskName = it
                         },
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color(0xFF6a50f1)
+                            focusedBorderColor = if (isError) {
+                                Color(0xFFfbb97d)
+                            } else {
+                                Color(0xFF6a50f1)
+                            }
                         ),
                         shape = RoundedCornerShape(12.dp),
                         singleLine = true,
@@ -137,7 +155,7 @@ fun TaskCreateScreen() {
                             .onFocusChanged {
                                 isFocused = it.isFocused
 
-                                if (it.isFocused && !wasFocusedOnce){
+                                if (it.isFocused && !wasFocusedOnce) {
                                     wasFocusedOnce = true
                                 }
                             }
@@ -147,15 +165,32 @@ fun TaskCreateScreen() {
                         fontSize = labelFontSize.sp,
                         modifier = Modifier.offset(x = labelOffsetX, y = labelOffsetY)
                     )
+                    if (wasFocusedOnce) {
+                        Image(
+                            painter = painterResource(R.drawable.ic_close),
+                            contentDescription = "",
+                            modifier = Modifier
+                                .align(Alignment.CenterEnd)
+                                .padding(end = 24.dp)
+                                .size(size = 18.dp)
+                                .clickable {
+                                    taskName = ""
+                                }
+                        )
+                    }
                     if (isTextCounterVisible) {
                         Text(
-                            text = "${taskName.length}/100",
+                            text = "${taskName.length}/${MAX_LETTER_COUNT}",
+                            color = if (isError) Color(0xFFfbb97d) else Color(0xFFb6b7b9),
+                            fontWeight = FontWeight.Bold,
                             modifier = Modifier
                                 .align(Alignment.BottomEnd)
                                 .padding(end = 16.dp)
                         )
                     }
-
+                }
+                if (isError) {
+                    ShowOutWarning()
                 }
 
             }
@@ -163,7 +198,7 @@ fun TaskCreateScreen() {
                 onClick = {
 
                 },
-                enabled = taskName.isNotEmpty(),
+                enabled = taskName.length in 3..100,
                 colors = ButtonDefaults.buttonColors(
                     contentColor = Color(0xFFFFFFFF),
                     containerColor = Color(0xFF6a50f1),
@@ -176,8 +211,6 @@ fun TaskCreateScreen() {
                     .padding(start = 16.dp, end = 16.dp, bottom = 24.dp)
                     .fillMaxWidth()
                     .height(56.dp)
-
-
             ) {
                 Text(
                     text = "Сохранить",
@@ -188,6 +221,30 @@ fun TaskCreateScreen() {
         }
 
     }
+}
+
+
+@Composable
+fun ShowOutWarning() {
+    Row(
+        horizontalArrangement = Arrangement.Center,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 16.dp, end = 16.dp, top = 16.dp)
+            .background(color = Color(0xFFffefe2), shape = RoundedCornerShape(12.dp))
+            .padding(vertical = 16.dp)
+    ) {
+        Image(
+            painter = painterResource(R.drawable.ic_outlenght_warning),
+            contentDescription = "")
+        Text(
+            text = "Превышен лимит в 100 символов",
+            color = Color(0xFFdc855a),
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.align(Alignment.CenterVertically).padding(start = 8.dp)
+        )
+    }
+
 }
 
 
