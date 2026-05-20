@@ -49,16 +49,16 @@ import com.powakaz.feature_tasks.R
 
 
 data class TaskUiState(
-    val taskName : String = "",
+    val taskName: String = "",
     val isError: Boolean = false,
     val wasFocusedOnce: Boolean = false,
     val isFocused: Boolean = false,
     val maxLetterCount: Int = 100,
-    val canSave : Boolean = false
+    val canSave: Boolean = false
 )
 
 sealed interface TaskUiEvent {
-    data class TaskNameChanged(val name : String) : TaskUiEvent
+    data class TaskNameChanged(val name: String) : TaskUiEvent
     data class FocusChanged(val isFocused: Boolean) : TaskUiEvent
 
     object ClearTaskName : TaskUiEvent
@@ -69,16 +69,13 @@ sealed interface TaskUiEvent {
 @Preview(showBackground = true)
 @Composable
 fun TaskScreen() {
+    var inputState by remember { mutableStateOf(TaskUiState()) }
 
-    val MAX_LETTER_COUNT = 10
-
-    var taskName by remember { mutableStateOf("") }
-    var isFocused by remember { mutableStateOf(false) }
-    var wasFocusedOnce by remember { mutableStateOf(false) }
-
+    val taskName = inputState.taskName
+    val isError = inputState.isError
+    val wasFocusedOnce = inputState.wasFocusedOnce
 
     var isHeadVisible = !wasFocusedOnce
-    var isError = taskName.length > MAX_LETTER_COUNT
 
 
     Scaffold(
@@ -100,23 +97,20 @@ fun TaskScreen() {
                     Head()
                 }
                 TextInput(
-                    taskName = taskName,
-                    wasFocusedOnce = wasFocusedOnce,
-                    isError = isError,
-                    isFocused = isFocused,
-                    maxLetterCount = MAX_LETTER_COUNT,
+                    inputState,
                     onTaskNamedChanged = {
-                        taskName = it
+                        inputState = inputState.copy(
+                            taskName = it,
+                            isError = it.length > inputState.maxLetterCount
+                        )
                     },
                     onFocusChanged = {
-                        isFocused = it
-                        if (!wasFocusedOnce && it) {
-                            wasFocusedOnce = true
-                        }
+                        inputState =
+                            inputState.copy(isFocused = it, wasFocusedOnce = !wasFocusedOnce && it)
                     }
                 )
                 if (isError) {
-                    ErrorMessage()
+                    ErrorMessage(inputState)
                 }
 
             }
@@ -151,17 +145,13 @@ fun TaskScreen() {
 
 @Composable
 fun TextInput(
-    taskName: String,
-    wasFocusedOnce: Boolean,
-    isError: Boolean,
-    isFocused: Boolean,
-    maxLetterCount: Int,
+    inputState: TaskUiState,
     onTaskNamedChanged: (String) -> Unit,
     onFocusChanged: (Boolean) -> Unit
 ) {
 
-    var isTextCounterVisible = wasFocusedOnce
-    val isLabelUp = isFocused || taskName.isNotEmpty()
+    var isTextCounterVisible = inputState.wasFocusedOnce
+    val isLabelUp = inputState.isFocused || inputState.taskName.isNotEmpty()
 
     val labelOffsetY by animateDpAsState(
         targetValue = if (isLabelUp) 0.dp else 42.dp // 0 - над полем, 40 - внутри поля
@@ -175,12 +165,12 @@ fun TextInput(
 
     Box() {
         OutlinedTextField(
-            value = taskName,
+            value = inputState.taskName,
             onValueChange = {
                 onTaskNamedChanged(it)
             },
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = if (isError) {
+                focusedBorderColor = if (inputState.isError) {
                     Color(0xFFfbb97d)
                 } else {
                     Color(0xFF6a50f1)
@@ -200,7 +190,7 @@ fun TextInput(
             fontSize = labelFontSize.sp,
             modifier = Modifier.offset(x = labelOffsetX, y = labelOffsetY)
         )
-        if (wasFocusedOnce) {
+        if (inputState.wasFocusedOnce) {
             Image(
                 painter = painterResource(R.drawable.ic_close),
                 contentDescription = "",
@@ -215,8 +205,8 @@ fun TextInput(
         }
         if (isTextCounterVisible) {
             Text(
-                text = "${taskName.length}/${maxLetterCount}",
-                color = if (isError) Color(0xFFfbb97d) else Color(0xFFb6b7b9),
+                text = "${inputState.taskName.length}/${inputState.maxLetterCount}",
+                color = if (inputState.isError) Color(0xFFfbb97d) else Color(0xFFb6b7b9),
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
@@ -258,7 +248,7 @@ fun Head() {
 
 
 @Composable
-fun ErrorMessage() {
+fun ErrorMessage(inputState: TaskUiState) {
     Row(
         horizontalArrangement = Arrangement.Center,
         modifier = Modifier
@@ -272,7 +262,7 @@ fun ErrorMessage() {
             contentDescription = ""
         )
         Text(
-            text = "Превышен лимит в 100 символов",
+            text = "Превышен лимит в ${inputState.maxLetterCount} символов",
             color = Color(0xFFdc855a),
             fontWeight = FontWeight.Bold,
             modifier = Modifier
