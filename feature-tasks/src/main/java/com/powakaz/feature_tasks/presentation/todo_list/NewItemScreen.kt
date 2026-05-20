@@ -8,6 +8,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -45,39 +46,24 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.powakaz.feature_tasks.R
 
 
-data class TaskUiState(
-    val taskName: String = "",
-    val isError: Boolean = false,
-    val wasFocusedOnce: Boolean = false,
-    val isFocused: Boolean = false,
-    val maxLetterCount: Int = 100,
-    val canSave: Boolean = false
-)
-
-sealed interface TaskUiEvent {
-    data class TaskNameChanged(val name: String) : TaskUiEvent
-    data class FocusChanged(val isFocused: Boolean) : TaskUiEvent
-
-    object ClearTaskName : TaskUiEvent
-    object SaveClicked : TaskUiEvent
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TaskScreen(viewModel: NewTaskViewModel = hiltViewModel()) {
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+    TaskContent(
+        inputState = state,
+        onEvent = viewModel::onEvent
+    )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Preview(showBackground = true)
+
 @Composable
-fun TaskScreen() {
-    var inputState by remember { mutableStateOf(TaskUiState()) }
-
-    val taskName = inputState.taskName
-    val isError = inputState.isError
-    val wasFocusedOnce = inputState.wasFocusedOnce
-
-    var isHeadVisible = !wasFocusedOnce
-
-
+fun TaskContent(inputState: TaskUiState, onEvent: (TaskUiEvent) -> Unit) {
     Scaffold(
         topBar = {
             TopBar(stringResource(R.string.create_task))
@@ -93,53 +79,52 @@ fun TaskScreen() {
                     .align(alignment = Alignment.Center)
                     .padding(bottom = 98.dp)
             ) {
-                AnimatedVisibility(visible = isHeadVisible) {
+                AnimatedVisibility(visible = inputState.isHeadVisible) {
                     Head()
                 }
                 TextInput(
-                    inputState,
+                    inputState = inputState,
                     onTaskNamedChanged = {
-                        inputState = inputState.copy(
-                            taskName = it,
-                            isError = it.length > inputState.maxLetterCount
-                        )
+                        onEvent(TaskUiEvent.TaskNameChanged(it))
                     },
                     onFocusChanged = {
-                        inputState =
-                            inputState.copy(isFocused = it, wasFocusedOnce = !wasFocusedOnce && it)
+                        onEvent(TaskUiEvent.FocusChanged(it))
                     }
                 )
-                if (isError) {
+                if (inputState.isError) {
                     ErrorMessage(inputState)
                 }
-
             }
-            Button(
-                onClick = {
-
-                },
-                enabled = taskName.length in 3..100 && !isError,
-                colors = ButtonDefaults.buttonColors(
-                    contentColor = Color(0xFFFFFFFF),
-                    containerColor = Color(0xFF6a50f1),
-                    disabledContainerColor = Color(0xFFEBE5FC),
-                    disabledContentColor = Color(0xFFFFFFFF),
-                ),
-                shape = RoundedCornerShape(16.dp),
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(start = 16.dp, end = 16.dp, bottom = 24.dp)
-                    .fillMaxWidth()
-                    .height(56.dp)
-            ) {
-                Text(
-                    text = "Сохранить",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
+            ButtonSave(inputState)
         }
+    }
+}
 
+@Composable
+fun BoxScope.ButtonSave(inputState: TaskUiState) {
+    Button(
+        onClick = {
+
+        },
+        enabled = inputState.canSave,
+        colors = ButtonDefaults.buttonColors(
+            contentColor = Color(0xFFFFFFFF),
+            containerColor = Color(0xFF6a50f1),
+            disabledContainerColor = Color(0xFFEBE5FC),
+            disabledContentColor = Color(0xFFFFFFFF),
+        ),
+        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier
+            .align(Alignment.BottomCenter)
+            .padding(start = 16.dp, end = 16.dp, bottom = 24.dp)
+            .fillMaxWidth()
+            .height(56.dp)
+    ) {
+        Text(
+            text = "Сохранить",
+            fontSize = 16.sp,
+            fontWeight = FontWeight.SemiBold
+        )
     }
 }
 
@@ -149,18 +134,14 @@ fun TextInput(
     onTaskNamedChanged: (String) -> Unit,
     onFocusChanged: (Boolean) -> Unit
 ) {
-
-    var isTextCounterVisible = inputState.wasFocusedOnce
-    val isLabelUp = inputState.isFocused || inputState.taskName.isNotEmpty()
-
     val labelOffsetY by animateDpAsState(
-        targetValue = if (isLabelUp) 0.dp else 42.dp // 0 - над полем, 40 - внутри поля
+        targetValue = if (inputState.isLabelUp) 0.dp else 42.dp // 0 - над полем, 40 - внутри поля
     )
     val labelOffsetX by animateDpAsState(
-        targetValue = if (isLabelUp) 24.dp else 36.dp // 0 - над полем, 40 - внутри поля
+        targetValue = if (inputState.isLabelUp) 24.dp else 36.dp // 0 - над полем, 40 - внутри поля
     )
     val labelFontSize by animateFloatAsState(
-        targetValue = if (isLabelUp) 12f else 16f
+        targetValue = if (inputState.isLabelUp) 12f else 16f
     )
 
     Box() {
@@ -203,7 +184,7 @@ fun TextInput(
                     }
             )
         }
-        if (isTextCounterVisible) {
+        if (inputState.isTextCounterVisible) {
             Text(
                 text = "${inputState.taskName.length}/${inputState.maxLetterCount}",
                 color = if (inputState.isError) Color(0xFFfbb97d) else Color(0xFFb6b7b9),
