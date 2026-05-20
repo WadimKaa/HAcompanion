@@ -61,6 +61,21 @@ fun TaskScreen(viewModel: NewTaskViewModel = hiltViewModel()) {
     )
 }
 
+@Preview(showBackground = true)
+@Composable
+fun TaskContentPreview() {
+    // Создаем фейковое состояние для отображения в превью
+    val fakeState = TaskUiState(
+        taskName = "Купить молоко",
+        wasFocusedOnce = false
+    )
+
+    TaskContent(
+        inputState = fakeState,
+        onEvent = {}
+    )
+}
+
 
 @Composable
 fun TaskContent(inputState: TaskUiState, onEvent: (TaskUiEvent) -> Unit) {
@@ -155,6 +170,11 @@ fun TextInput(
                     Color(0xFFfbb97d)
                 } else {
                     Color(0xFF6a50f1)
+                },
+                unfocusedBorderColor = if (inputState.isError) {
+                    Color(0xFFfbb97d)
+                } else {
+                    Color(0xFF79747e)
                 }
             ),
             shape = RoundedCornerShape(12.dp),
