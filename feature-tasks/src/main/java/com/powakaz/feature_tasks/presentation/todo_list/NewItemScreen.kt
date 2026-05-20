@@ -48,10 +48,27 @@ import androidx.compose.ui.unit.sp
 import com.powakaz.feature_tasks.R
 
 
+data class TaskUiState(
+    val taskName : String = "",
+    val isError: Boolean = false,
+    val wasFocusedOnce: Boolean = false,
+    val isFocused: Boolean = false,
+    val maxLetterCount: Int = 100,
+    val canSave : Boolean = false
+)
+
+sealed interface TaskUiEvent {
+    data class TaskNameChanged(val name : String) : TaskUiEvent
+    data class FocusChanged(val isFocused: Boolean) : TaskUiEvent
+
+    object ClearTaskName : TaskUiEvent
+    object SaveClicked : TaskUiEvent
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Preview(showBackground = true)
 @Composable
-fun TaskCreateScreen() {
+fun TaskScreen() {
 
     val MAX_LETTER_COUNT = 10
 
@@ -66,7 +83,7 @@ fun TaskCreateScreen() {
 
     Scaffold(
         topBar = {
-            CreateTopBar(stringResource(R.string.create_task))
+            TopBar(stringResource(R.string.create_task))
         }
     ) { paddingValues ->
         Box(
@@ -93,9 +110,9 @@ fun TaskCreateScreen() {
                     },
                     onFocusChanged = {
                         isFocused = it
-                    },
-                    onOnceFocusChanged = {
-                        wasFocusedOnce = it
+                        if (!wasFocusedOnce && it) {
+                            wasFocusedOnce = true
+                        }
                     }
                 )
                 if (isError) {
@@ -140,7 +157,6 @@ fun TextInput(
     isFocused: Boolean,
     maxLetterCount: Int,
     onTaskNamedChanged: (String) -> Unit,
-    onOnceFocusChanged: (Boolean) -> Unit,
     onFocusChanged: (Boolean) -> Unit
 ) {
 
@@ -177,10 +193,6 @@ fun TextInput(
                 .padding(start = 16.dp, end = 16.dp, top = 24.dp, bottom = 24.dp)
                 .onFocusChanged {
                     onFocusChanged(it.isFocused)
-
-                    if (it.isFocused && !wasFocusedOnce) {
-                        onOnceFocusChanged(true)
-                    }
                 }
         )
         Text(
@@ -273,7 +285,7 @@ fun ErrorMessage() {
 
 
 @Composable
-fun CreateTopBar(title: String) {
+fun TopBar(title: String) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
