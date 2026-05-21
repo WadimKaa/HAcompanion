@@ -114,8 +114,45 @@ fun TaskContent(inputState: TaskUiState, onEvent: (TaskUiEvent) -> Unit) {
 
             })
 
-            NetErrorToast()
         }
+    }
+}
+
+@Composable
+fun BoxScope.ExceptionToast() {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 16.dp, end = 16.dp, bottom = 48.dp)
+            .background(shape = RoundedCornerShape(16.dp), color = Color(0xFF1e283e))
+            .padding(horizontal = 16.dp, vertical = 16.dp)
+            .align(Alignment.BottomCenter)
+    ) {
+        Icon(
+            painter = painterResource(R.drawable.ic_outlenght_warning),
+            contentDescription = null,
+            tint = Color.Unspecified,
+            modifier = Modifier.size(36.dp)
+        )
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = 16.dp)
+        ) {
+            Text(text = "Не удалось сохранить", color = Color.White, fontWeight = FontWeight.SemiBold)
+            Text(
+                text = "Что-то пошло не так.\nПопробуйте еще раз",
+                color = Color(0x99FFFFFF),
+                modifier = Modifier.padding(top = 4.dp)
+            )
+        }
+        Icon(
+            painter = painterResource(R.drawable.ic_close),
+            contentDescription = null,
+            tint = Color(0xFFdee4ea),
+            modifier = Modifier.padding(bottom = 24.dp)
+        )
     }
 }
 
@@ -125,9 +162,10 @@ fun BoxScope.NetErrorToast() {
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 16.dp, end = 16.dp)
+            .padding(start = 16.dp, end = 16.dp, bottom = 48.dp)
             .background(shape = RoundedCornerShape(16.dp), color = Color(0xFF1e283e))
             .padding(horizontal = 16.dp, vertical = 16.dp)
+            .align(Alignment.BottomCenter)
     ) {
         Icon(
             painter = painterResource(R.drawable.ic_exception),
@@ -142,7 +180,7 @@ fun BoxScope.NetErrorToast() {
         ) {
             Text(text = "Ошибка сети", color = Color.White, fontWeight = FontWeight.SemiBold)
             Text(
-                text = "Что-то пошло не так.\nПопробуйте еще раз",
+                text = "Проверьте подключение\nи попробуйте еще раз",
                 color = Color(0x99FFFFFF),
                 modifier = Modifier.padding(top = 4.dp)
             )
@@ -154,7 +192,6 @@ fun BoxScope.NetErrorToast() {
             modifier = Modifier.padding(bottom = 24.dp)
         )
     }
-
 }
 
 @Composable
