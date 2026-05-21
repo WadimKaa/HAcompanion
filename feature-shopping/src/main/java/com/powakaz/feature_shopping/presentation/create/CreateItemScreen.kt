@@ -4,6 +4,14 @@ import android.R.attr.enabled
 import android.annotation.SuppressLint
 import android.icu.text.CaseMap
 import android.widget.Toast
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -44,6 +52,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
@@ -57,7 +66,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.powakaz.feature_shopping.R
-import com.powakaz.feature_shopping.presentation.input.InputState
+import com.powakaz.feature_shopping.presentation.input.InputStateTextField
 
 
 @SuppressLint("ResourceAsColor")
@@ -70,19 +79,36 @@ fun CreateItemScreen() {
     var isTouched by remember { mutableStateOf(false) }
 
 
-    val state = when {
-        text.isNotBlank() -> InputState.NotEmptyInputField
-        isTouched && text.isBlank() -> InputState.EmptyInputField
-        else -> InputState.StartInputField
+    val stateText = when {
+        text.isNotBlank() -> InputStateTextField.NotEmptyInputField
+        isTouched && text.isBlank() -> InputStateTextField.EmptyInputField
+        else -> InputStateTextField.StartInputField
     }
 
-    val isEnabledSaveButton = state is InputState.NotEmptyInputField
+    val isEnabledSaveButton = stateText is InputStateTextField.NotEmptyInputField
+    val showHeader = stateText is InputStateTextField.StartInputField
 
-    val borderColor = when(state) {
-        InputState.NotEmptyInputField ->  Color(R.color.btn_blue)
-        InputState.EmptyInputField ->  Color.Red
-        InputState.StartInputField ->  Color.Gray
+    val borderColorTextField = when (stateText) {
+        InputStateTextField.NotEmptyInputField -> Color(R.color.btn_blue)
+        InputStateTextField.EmptyInputField -> Color.Red
+        InputStateTextField.StartInputField -> Color.Gray
     }
+
+    ///animation
+    val offsetY by animateDpAsState(
+        targetValue = if (showHeader) 0.dp else (-80).dp,
+        animationSpec = tween(300)
+    )
+
+    val alpha by animateFloatAsState(
+        targetValue = if (showHeader) 1f else 0f,
+        animationSpec = tween(300)
+    )
+
+    val scale by animateFloatAsState(
+        targetValue = if (showHeader) 1f else 0.8f,
+        animationSpec = tween(300)
+    )
 
 
     Scaffold(
@@ -129,51 +155,62 @@ fun CreateItemScreen() {
     ) { padding ->
 
         Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
+                .padding(padding),
+            horizontalAlignment = Alignment.CenterHorizontally
 
         ) {
             Spacer(modifier = Modifier.height(60.dp))
 
-            Icon(
-                painter = painterResource(id = R.drawable.ic_shopping_item_add),
-                contentDescription = null,
-                tint = Color.Unspecified,
-                modifier = Modifier
-                    .size(160.dp)
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.graphicsLayer {
+                    translationY = offsetY.toPx()
+                    this.alpha = alpha
+                    scaleX = scale
+                    scaleY = scale
+                }
+            ) {
 
-            )
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_shopping_item_add),
+                    contentDescription = null,
+                    tint = Color.Unspecified,
+                    modifier = Modifier
+                        .size(160.dp)
 
-            Spacer(modifier = Modifier.height(14.dp))
+                )
 
-            Text(
-                text = stringResource(id = R.string.add_new_product),
-                color = Color.Black,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                fontFamily = FontFamily.SansSerif
-            )
+                Spacer(modifier = Modifier.height(14.dp))
 
-            Spacer(modifier = Modifier.height(10.dp))
+                Text(
+                    text = stringResource(id = R.string.add_new_product),
+                    color = Color.Black,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = FontFamily.SansSerif
+                )
 
-            Text(
-                text = stringResource(id = R.string.add_new_product_text),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 40.dp, end = 40.dp),
-                textAlign = TextAlign.Center,
-                color = Color.DarkGray,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium,
-                fontFamily = FontFamily.SansSerif
-            )
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Text(
+                    text = stringResource(id = R.string.add_new_product_text),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 40.dp, end = 40.dp),
+                    textAlign = TextAlign.Center,
+                    color = Color.DarkGray,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium,
+                    fontFamily = FontFamily.SansSerif
+                )
+
+            }
 
             Spacer(modifier = Modifier.height(60.dp))
 
             ///
-
 
             OutlinedTextField(
                 value = text,
@@ -205,12 +242,11 @@ fun CreateItemScreen() {
                 shape = RoundedCornerShape(12.dp),
 
                 colors = TextFieldDefaults.colors(
-                    focusedIndicatorColor = borderColor,
-                    unfocusedIndicatorColor = borderColor,
+                    focusedIndicatorColor = borderColorTextField,
+                    unfocusedIndicatorColor = borderColorTextField,
                     cursorColor = Color.DarkGray
                 )
             )
-
 
             Column(
                 modifier = Modifier.weight(1f)
@@ -232,17 +268,17 @@ fun CreateItemScreen() {
                         .padding(start = 24.dp, end = 24.dp)
                         .clip(RoundedCornerShape(10.dp))
                         .background(
-                            when(state) {
-                                InputState.NotEmptyInputField -> Color(R.color.btn_blue)
-                                InputState.EmptyInputField -> Color.Red
-                                InputState.StartInputField -> Color.Gray
+                            when (stateText) {
+                                InputStateTextField.NotEmptyInputField -> Color(R.color.btn_blue)
+                                InputStateTextField.EmptyInputField -> Color.Red
+                                InputStateTextField.StartInputField -> Color.Gray
                             }
                         )
                         .clickable(enabled = isEnabledSaveButton) {
                             Toast
                                 .makeText(context, "Сохранено", Toast.LENGTH_SHORT)
                                 .show()
-                        } ,
+                        },
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
@@ -257,3 +293,4 @@ fun CreateItemScreen() {
         }
     }
 }
+
