@@ -1,1 +1,15 @@
-<resources></resources>
+<resources>
+
+    <string name="shopping_list">Список покупок</string>
+    <string name="need_to_buy">необходимо купить</string>
+
+
+
+    <string name="new_product">Новый товар</string>
+    <string name="add_new_product">Добавьте новый товар</string>
+    <string name="add_new_product_text">Введите название товара, чтобы добавить его в список</string>
+    <string name="product_name">Название товара</string>
+    <string name="save">Сохранить</string>
+
+</resources>
+

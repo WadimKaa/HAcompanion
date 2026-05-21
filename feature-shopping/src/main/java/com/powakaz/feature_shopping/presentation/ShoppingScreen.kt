@@ -9,8 +9,8 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.tooling.preview.Preview
 import com.powakaz.feature_shopping.presentation.components.ShoppingItemRow
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ShoppingScreen(viewModel: ShoppingViewModel) {
