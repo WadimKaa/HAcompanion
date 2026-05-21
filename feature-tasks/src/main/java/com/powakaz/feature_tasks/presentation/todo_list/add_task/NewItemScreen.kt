@@ -1,4 +1,4 @@
-package com.powakaz.feature_tasks.presentation.todo_list
+package com.powakaz.feature_tasks.presentation.todo_list.add_task
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
@@ -18,11 +18,13 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
@@ -32,9 +34,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
@@ -66,7 +65,7 @@ fun TaskScreen(viewModel: NewTaskViewModel = hiltViewModel()) {
 fun TaskContentPreview() {
     // Создаем фейковое состояние для отображения в превью
     val fakeState = TaskUiState(
-        taskName = "Купить молоко",
+        taskName = "Купить мо",
         wasFocusedOnce = false
     )
 
@@ -110,22 +109,67 @@ fun TaskContent(inputState: TaskUiState, onEvent: (TaskUiEvent) -> Unit) {
                     ErrorMessage(inputState)
                 }
             }
-            ButtonSave(inputState)
+            ButtonSave(inputState, onClickButtonSave = {
+                onEvent(TaskUiEvent.ClearTaskName)
+
+            })
+
+            NetErrorToast()
         }
     }
 }
 
 @Composable
-fun BoxScope.ButtonSave(inputState: TaskUiState) {
+fun BoxScope.NetErrorToast() {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 16.dp, end = 16.dp)
+            .background(shape = RoundedCornerShape(16.dp), color = Color(0xFF1e283e))
+            .padding(horizontal = 16.dp, vertical = 16.dp)
+    ) {
+        Icon(
+            painter = painterResource(R.drawable.ic_exception),
+            contentDescription = null,
+            tint = Color.Unspecified,
+            modifier = Modifier.size(36.dp)
+        )
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = 16.dp)
+        ) {
+            Text(text = "Ошибка сети", color = Color.White, fontWeight = FontWeight.SemiBold)
+            Text(
+                text = "Что-то пошло не так.\nПопробуйте еще раз",
+                color = Color(0x99FFFFFF),
+                modifier = Modifier.padding(top = 4.dp)
+            )
+        }
+        Icon(
+            painter = painterResource(R.drawable.ic_close),
+            contentDescription = null,
+            tint = Color(0xFFdee4ea),
+            modifier = Modifier.padding(bottom = 24.dp)
+        )
+    }
+
+}
+
+@Composable
+fun BoxScope.ButtonSave(inputState: TaskUiState, onClickButtonSave: () -> Unit) {
+    val disabledContainerColor = if (inputState.isLoading) Color(0xFF8f78fa) else Color(0xFFEBE5FC)
+    val buttonText = if (inputState.isLoading) "Сохранить..." else "Сохранить"
     Button(
         onClick = {
-
+            onClickButtonSave()
         },
-        enabled = inputState.canSave,
+        enabled = inputState.canSave && !inputState.isLoading,
         colors = ButtonDefaults.buttonColors(
             contentColor = Color(0xFFFFFFFF),
             containerColor = Color(0xFF6a50f1),
-            disabledContainerColor = Color(0xFFEBE5FC),
+            disabledContainerColor = disabledContainerColor,
             disabledContentColor = Color(0xFFFFFFFF),
         ),
         shape = RoundedCornerShape(16.dp),
@@ -135,8 +179,18 @@ fun BoxScope.ButtonSave(inputState: TaskUiState) {
             .fillMaxWidth()
             .height(56.dp)
     ) {
+        if (inputState.isLoading) {
+            CircularProgressIndicator(
+                color = Color.White,
+                trackColor = Color.White.copy(alpha = 0.2f),
+                strokeWidth = 3.dp,
+                modifier = Modifier
+                    .padding(end = 16.dp)
+                    .size(20.dp)
+            )
+        }
         Text(
-            text = "Сохранить",
+            text = buttonText,
             fontSize = 16.sp,
             fontWeight = FontWeight.SemiBold
         )

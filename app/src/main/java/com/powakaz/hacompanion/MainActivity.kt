@@ -14,7 +14,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import com.powakaz.feature_tasks.presentation.todo_list.TaskScreen
+import com.powakaz.feature_tasks.presentation.todo_list.add_task.TaskScreen
 import com.powakaz.hacompanion.ui.theme.HAcompanionTheme
 import dagger.hilt.android.AndroidEntryPoint
 

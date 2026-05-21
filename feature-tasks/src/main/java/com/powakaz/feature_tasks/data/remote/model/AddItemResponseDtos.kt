@@ -4,17 +4,14 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 
-@Serializable
-data class ResponseDto(
-    val list : List<InfoEntityDto>
-)
+
 
 @Serializable
 data class InfoEntityDto(
     @SerialName("entity_id")
     val entityId : String,
     @SerialName("state")
-    val state : Int,
+    val state : String,
     @SerialName("attributes")
     val attributesDto : AttributesDto,
     @SerialName("last_changed")

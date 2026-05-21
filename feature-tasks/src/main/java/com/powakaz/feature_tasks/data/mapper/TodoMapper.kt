@@ -1,7 +1,8 @@
 package com.powakaz.feature_tasks.data.mapper
 
-import com.powakaz.feature_tasks.data.remote.model.ResponseDto
+import com.powakaz.feature_tasks.data.remote.model.InfoEntityDto
 import com.powakaz.feature_tasks.data.remote.model.TodoItemDto
+import com.powakaz.feature_tasks.data.remote.model.TodoItemsResponseDto
 import com.powakaz.feature_tasks.domain.model.Response
 import com.powakaz.feature_tasks.domain.model.TodoItem
 
@@ -14,8 +15,8 @@ fun TodoItemDto.toDomain() : TodoItem{
 }
 
 
-fun ResponseDto.toDomain() : Response {
+fun List<InfoEntityDto>.toDomain() : Response {
     return Response(
-        isSuccess = this.list.isNotEmpty()
+        isSuccess = true
     )
 }
