@@ -10,6 +10,7 @@
     <string name="add_new_product_text">Введите название товара, чтобы добавить его в список</string>
     <string name="product_name">Название товара</string>
     <string name="save">Сохранить</string>
+    <string name="enter_product">Введите название товара</string>
 
 </resources>
 

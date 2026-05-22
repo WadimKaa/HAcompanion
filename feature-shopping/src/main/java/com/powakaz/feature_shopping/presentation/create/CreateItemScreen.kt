@@ -17,12 +17,14 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
@@ -85,30 +87,61 @@ fun CreateItemScreen() {
         else -> InputStateTextField.StartInputField
     }
 
-    val isEnabledSaveButton = stateText is InputStateTextField.NotEmptyInputField
+    val textEntered = stateText is InputStateTextField.NotEmptyInputField
     val showHeader = stateText is InputStateTextField.StartInputField
+    val showLabel =
+        stateText is InputStateTextField.NotEmptyInputField || stateText is InputStateTextField.EmptyInputField
+    val showLabelEmptyText = stateText is InputStateTextField.EmptyInputField
 
     val borderColorTextField = when (stateText) {
-        InputStateTextField.NotEmptyInputField -> Color(R.color.btn_blue)
+        InputStateTextField.NotEmptyInputField -> Color.Blue
         InputStateTextField.EmptyInputField -> Color.Red
         InputStateTextField.StartInputField -> Color.Gray
     }
 
-    ///animation
-    val offsetY by animateDpAsState(
+    val topSpacer by animateDpAsState(
+        targetValue = if (showLabel) 0.dp else 60.dp
+    )
+
+    ///animation showHeader
+    val showHeaderOffsetY by animateDpAsState(
         targetValue = if (showHeader) 0.dp else (-80).dp,
         animationSpec = tween(300)
     )
 
-    val alpha by animateFloatAsState(
+    val showHeaderAlpha by animateFloatAsState(
         targetValue = if (showHeader) 1f else 0f,
         animationSpec = tween(300)
     )
 
-    val scale by animateFloatAsState(
+    val showHeaderScale by animateFloatAsState(
         targetValue = if (showHeader) 1f else 0.8f,
         animationSpec = tween(300)
     )
+
+    ///// animation show Label "name text"
+    val showLabelAlpha by animateFloatAsState(
+        targetValue = if (showLabel) 1f else 0f,
+        animationSpec = tween(300)
+    )
+
+    val showLabelOffSetY by animateDpAsState(
+        targetValue = if (showLabel) 0.dp else 10.dp,
+        animationSpec = tween(300)
+    )
+
+    ///// animation show Label "empty text"
+    val showLabelEmptyTextAlpha by animateFloatAsState(
+        targetValue = if (showLabelEmptyText) 1f else 0f,
+        animationSpec = tween(300)
+    )
+
+    val showLabelEmptyTextOffSetY by animateDpAsState(
+        targetValue = if (showLabelEmptyText) 0.dp else 10.dp,
+        animationSpec = tween(300)
+    )
+
+
 
 
     Scaffold(
@@ -118,7 +151,7 @@ fun CreateItemScreen() {
                     Box(
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Box(
+                        /*Box(
                             modifier = Modifier
                                 .size(40.dp)
                                 .align(Alignment.CenterStart)
@@ -128,7 +161,7 @@ fun CreateItemScreen() {
                                     clip = false
                                 )
                                 .clip(RoundedCornerShape(10.dp))
-                                .background(colorResource(R.color.create_arrow_light_grey))
+                                .background(Color.White)
                                 .clickable { /* onClick */ },
                             contentAlignment = Alignment.Center
                         ) {
@@ -136,6 +169,29 @@ fun CreateItemScreen() {
                                 painter = painterResource(id = R.drawable.arrow),
                                 contentDescription = null,
                                 modifier = Modifier.size(22.dp)
+                            )
+                        }*/
+                        Button(
+                            onClick = {
+
+                            },
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color.White
+                            ),
+                            contentPadding = PaddingValues(0.dp),
+                            elevation = ButtonDefaults.buttonElevation(
+                                defaultElevation = 6.dp
+                            ),
+                            modifier = Modifier
+                                .size(40.dp)
+                        ) {
+
+                            Icon(
+                                painter = painterResource(R.drawable.arrow),
+                                contentDescription = null,
+                                tint = Color.Black,
+                                modifier = Modifier.size(20.dp)
                             )
                         }
 
@@ -161,15 +217,16 @@ fun CreateItemScreen() {
             horizontalAlignment = Alignment.CenterHorizontally
 
         ) {
-            Spacer(modifier = Modifier.height(60.dp))
+
+            Spacer(modifier = Modifier.height(topSpacer))
 
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.graphicsLayer {
-                    translationY = offsetY.toPx()
-                    this.alpha = alpha
-                    scaleX = scale
-                    scaleY = scale
+                    translationY = showHeaderOffsetY.toPx()
+                    this.alpha = showHeaderAlpha
+                    scaleX = showHeaderScale
+                    scaleY = showHeaderScale
                 }
             ) {
 
@@ -208,45 +265,92 @@ fun CreateItemScreen() {
 
             }
 
-            Spacer(modifier = Modifier.height(60.dp))
+            Spacer(modifier = Modifier.height(topSpacer))
 
-            ///
-
-            OutlinedTextField(
-                value = text,
-                onValueChange = {
-                    text = it
-                    isTouched = true
-                },
-
-                singleLine = true,
-
-                textStyle = TextStyle(
-                    fontSize = 18.sp,
-                    color = Color.Black
-                ),
-
-                placeholder = {
-                    Text(
-                        text = stringResource(id = R.string.product_name),
-                        fontSize = 14.sp,
-                        color = Color.Gray
-                    )
-                },
-
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(60.dp)
-                    .padding(start = 24.dp, end = 24.dp),
+                    .padding(horizontal = 24.dp)
+            ) {
 
-                shape = RoundedCornerShape(12.dp),
-
-                colors = TextFieldDefaults.colors(
-                    focusedIndicatorColor = borderColorTextField,
-                    unfocusedIndicatorColor = borderColorTextField,
-                    cursorColor = Color.DarkGray
+                Text(
+                    text = stringResource(id = R.string.product_name),
+                    fontSize = 12.sp,
+                    color = Color.DarkGray,
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier
+                        .padding(start = 4.dp, bottom = 8.dp)
+                        .graphicsLayer {
+                            alpha = showLabelAlpha
+                            translationY = showLabelOffSetY.toPx()
+                        }
                 )
-            )
+
+
+
+                OutlinedTextField(
+                    value = text,
+                    onValueChange = {
+                        text = it
+                        isTouched = true
+                    },
+
+                    trailingIcon = {
+                        if (textEntered) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.close),
+                                contentDescription = "Очистить",
+                                modifier = Modifier
+                                    .size(24.dp)
+                                    .padding(2.dp)
+                                    .clickable {
+                                        text = ""
+                                    }
+                            )
+                        }
+                    },
+
+                    singleLine = true,
+
+                    textStyle = TextStyle(
+                        fontSize = 18.sp,
+                        color = Color.Black
+                    ),
+
+                    placeholder = {
+                        Text(
+                            text = stringResource(id = R.string.product_name),
+                            fontSize = 14.sp,
+                            color = Color.Gray
+                        )
+                    },
+
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(60.dp),
+
+                    shape = RoundedCornerShape(12.dp),
+
+                    colors = TextFieldDefaults.colors(
+                        focusedIndicatorColor = borderColorTextField,
+                        unfocusedIndicatorColor = borderColorTextField,
+                        cursorColor = Color.DarkGray
+                    )
+                )
+
+                Text(
+                    text = stringResource(id = R.string.enter_product),
+                    fontSize = 12.sp,
+                    color = Color.Red,
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier
+                        .padding(start = 4.dp, top = 8.dp)
+                        .graphicsLayer {
+                            alpha = showLabelEmptyTextAlpha
+                            translationY = showLabelEmptyTextOffSetY.toPx()
+                        }
+                )
+            }
 
             Column(
                 modifier = Modifier.weight(1f)
@@ -255,41 +359,32 @@ fun CreateItemScreen() {
             }
             val context = LocalContext.current
 
-            Box(
+            Button(
+                onClick = {
+                    Toast
+                        .makeText(context, "Сохранено", Toast.LENGTH_SHORT)
+                        .show()
+                },
+                enabled = textEntered,
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Blue
+                ),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 40.dp)
                     .height(60.dp)
+                    .padding(start = 24.dp, end = 24.dp)
             ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(60.dp)
-                        .padding(start = 24.dp, end = 24.dp)
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(
-                            when (stateText) {
-                                InputStateTextField.NotEmptyInputField -> Color(R.color.btn_blue)
-                                InputStateTextField.EmptyInputField -> Color.Red
-                                InputStateTextField.StartInputField -> Color.Gray
-                            }
-                        )
-                        .clickable(enabled = isEnabledSaveButton) {
-                            Toast
-                                .makeText(context, "Сохранено", Toast.LENGTH_SHORT)
-                                .show()
-                        },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = stringResource(id = R.string.save),
-                        fontSize = 14.sp,
-                        color = Color.White,
-                        fontFamily = FontFamily.SansSerif,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
+                Text(
+                    text = stringResource(id = R.string.save),
+                    fontSize = 14.sp,
+                    color = Color.White,
+                    fontFamily = FontFamily.SansSerif,
+                    fontWeight = FontWeight.Bold
+                )
             }
+
+            Spacer(modifier = Modifier.height(40.dp))
         }
     }
 }
