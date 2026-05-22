@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.powakaz.core_network.model.NetworkResult
 import com.powakaz.feature_tasks.domain.usecase.AddTodoItemsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -19,7 +20,10 @@ data class TaskUiState(
     val wasFocusedOnce: Boolean = false,
     val isFocused: Boolean = false,
     val maxLetterCount: Int = 10,
-    val isLoading: Boolean = false
+    val isLoading: Boolean = false,
+    val isNeedShowNetErrorToast: Boolean = false,
+    val isNeedShowExceptionToast: Boolean = false,
+    val toastDelay: Long = 3_000L
 ) {
 
     var isHeadVisible = !wasFocusedOnce
@@ -34,6 +38,8 @@ sealed interface TaskUiEvent {
     data class FocusChanged(val isFocused: Boolean) : TaskUiEvent
     object ClearTaskName : TaskUiEvent
     object SaveClicked : TaskUiEvent
+    object ExceptionToastClose : TaskUiEvent
+    object ErrorToastClose : TaskUiEvent
 }
 
 
@@ -70,6 +76,19 @@ class NewTaskViewModel @Inject constructor(private val addTodoItemsUseCase: AddT
             TaskUiEvent.SaveClicked -> {
                 saveTask()
             }
+
+            TaskUiEvent.ErrorToastClose -> {
+                _uiState.update {
+                    it.copy(isNeedShowNetErrorToast = false)
+                }
+            }
+
+
+            TaskUiEvent.ExceptionToastClose -> {
+                _uiState.update {
+                    it.copy(isNeedShowExceptionToast = false)
+                }
+            }
         }
     }
 
@@ -89,18 +108,40 @@ class NewTaskViewModel @Inject constructor(private val addTodoItemsUseCase: AddT
 
                 when (response) {
                     is NetworkResult.Success -> {
-                        Log.e("LOL", "Success")
 
                     }
 
                     is NetworkResult.Error -> {
-                        Log.e("LOL", "Error ${response.code}")
+                        _uiState.update {
+                            it.copy(
+                                isNeedShowNetErrorToast = true,
+                                isLoading = false
+                            )
+                        }
 
+                        viewModelScope.launch {
+                            delay(currentState.toastDelay)
+
+                            _uiState.update {
+                                it.copy(isNeedShowNetErrorToast = false)
+                            }
+                        }
                     }
 
                     is NetworkResult.Exception -> {
-                        Log.e("LOL", "Exception ${response.e.message.toString()}")
+                        _uiState.update {
+                            it.copy(
+                                isNeedShowExceptionToast = true,
+                                isLoading = false)
+                        }
 
+                        viewModelScope.launch {
+                            delay(currentState.toastDelay)
+
+                            _uiState.update {
+                                it.copy(isNeedShowExceptionToast = false)
+                            }
+                        }
                     }
                 }
 

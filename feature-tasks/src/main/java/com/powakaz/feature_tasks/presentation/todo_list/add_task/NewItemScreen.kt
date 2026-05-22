@@ -27,12 +27,14 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -66,7 +68,8 @@ fun TaskContentPreview() {
     // Создаем фейковое состояние для отображения в превью
     val fakeState = TaskUiState(
         taskName = "Купить мо",
-        wasFocusedOnce = false
+        wasFocusedOnce = false,
+        isNeedShowNetErrorToast = true
     )
 
     TaskContent(
@@ -110,16 +113,44 @@ fun TaskContent(inputState: TaskUiState, onEvent: (TaskUiEvent) -> Unit) {
                 }
             }
             ButtonSave(inputState, onClickButtonSave = {
-                onEvent(TaskUiEvent.ClearTaskName)
-
+                onEvent(TaskUiEvent.SaveClicked)
             })
+            AnimatedVisibility(
+                visible = inputState.isNeedShowNetErrorToast,
+                modifier = Modifier.align(
+                    Alignment.BottomCenter
+                )
+            ) {
+                NetErrorToast(onCloseClick = { onEvent(TaskUiEvent.ErrorToastClose) })
 
+                DisposableEffect(Unit) {
+                    onDispose {
+                        onEvent(TaskUiEvent.ErrorToastClose)
+                    }
+                }
+            }
+
+
+            AnimatedVisibility(
+                visible = inputState.isNeedShowExceptionToast,
+
+                modifier = Modifier.align(
+                    Alignment.BottomCenter
+                )
+            ) {
+                ExceptionToast(onCloseClick = { onEvent(TaskUiEvent.ExceptionToastClose) })
+                DisposableEffect(Unit) {
+                    onDispose {
+                        onEvent(TaskUiEvent.ExceptionToastClose)
+                    }
+                }
+            }
         }
     }
 }
 
 @Composable
-fun BoxScope.ExceptionToast() {
+fun BoxScope.ExceptionToast(onCloseClick: () -> Unit) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
@@ -140,24 +171,34 @@ fun BoxScope.ExceptionToast() {
                 .weight(1f)
                 .padding(start = 16.dp)
         ) {
-            Text(text = "Не удалось сохранить", color = Color.White, fontWeight = FontWeight.SemiBold)
+            Text(
+                text = "Не удалось сохранить",
+                color = Color.White,
+                fontWeight = FontWeight.SemiBold
+            )
             Text(
                 text = "Что-то пошло не так.\nПопробуйте еще раз",
                 color = Color(0x99FFFFFF),
                 modifier = Modifier.padding(top = 4.dp)
             )
         }
-        Icon(
-            painter = painterResource(R.drawable.ic_close),
-            contentDescription = null,
-            tint = Color(0xFFdee4ea),
-            modifier = Modifier.padding(bottom = 24.dp)
-        )
+        IconButton(
+            onClick = {
+                onCloseClick()
+            },
+            modifier = Modifier.padding(bottom = 12.dp)
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_close),
+                contentDescription = null,
+                tint = Color(0xFFdee4ea)
+            )
+        }
     }
 }
 
 @Composable
-fun BoxScope.NetErrorToast() {
+fun BoxScope.NetErrorToast(onCloseClick: () -> Unit) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
@@ -185,12 +226,18 @@ fun BoxScope.NetErrorToast() {
                 modifier = Modifier.padding(top = 4.dp)
             )
         }
-        Icon(
-            painter = painterResource(R.drawable.ic_close),
-            contentDescription = null,
-            tint = Color(0xFFdee4ea),
-            modifier = Modifier.padding(bottom = 24.dp)
-        )
+        IconButton(
+            onClick = {
+                onCloseClick()
+            },
+            modifier = Modifier.padding(bottom = 12.dp)
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_close),
+                contentDescription = null,
+                tint = Color(0xFFdee4ea)
+            )
+        }
     }
 }
 
