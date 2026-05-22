@@ -1,18 +1,10 @@
 package com.powakaz.feature_shopping.presentation.create
 
-import android.R.attr.enabled
 import android.annotation.SuppressLint
-import android.icu.text.CaseMap
 import android.widget.Toast
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -20,28 +12,20 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.BadgeDefaults
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.material3.TimePickerDialogDefaults.Title
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -50,13 +34,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -64,7 +44,6 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.powakaz.feature_shopping.R
@@ -88,16 +67,12 @@ fun CreateItemScreen() {
     }
 
     val textEntered = stateText is InputStateTextField.NotEmptyInputField
-    val showHeader = stateText is InputStateTextField.StartInputField
+    val textNotEntered = stateText is InputStateTextField.EmptyInputField
+    val showStartHeader = stateText is InputStateTextField.StartInputField
     val showLabel =
         stateText is InputStateTextField.NotEmptyInputField || stateText is InputStateTextField.EmptyInputField
-    val showLabelEmptyText = stateText is InputStateTextField.EmptyInputField
 
-    val borderColorTextField = when (stateText) {
-        InputStateTextField.NotEmptyInputField -> Color.Blue
-        InputStateTextField.EmptyInputField -> Color.Red
-        InputStateTextField.StartInputField -> Color.Gray
-    }
+
 
     val topSpacer by animateDpAsState(
         targetValue = if (showLabel) 0.dp else 60.dp
@@ -105,17 +80,17 @@ fun CreateItemScreen() {
 
     ///animation showHeader
     val showHeaderOffsetY by animateDpAsState(
-        targetValue = if (showHeader) 0.dp else (-80).dp,
+        targetValue = if (showStartHeader) 0.dp else (-80).dp,
         animationSpec = tween(300)
     )
 
     val showHeaderAlpha by animateFloatAsState(
-        targetValue = if (showHeader) 1f else 0f,
+        targetValue = if (showStartHeader) 1f else 0f,
         animationSpec = tween(300)
     )
 
     val showHeaderScale by animateFloatAsState(
-        targetValue = if (showHeader) 1f else 0.8f,
+        targetValue = if (showStartHeader) 1f else 0.8f,
         animationSpec = tween(300)
     )
 
@@ -132,12 +107,18 @@ fun CreateItemScreen() {
 
     ///// animation show Label "empty text"
     val showLabelEmptyTextAlpha by animateFloatAsState(
-        targetValue = if (showLabelEmptyText) 1f else 0f,
+        targetValue = if (textNotEntered) 1f else 0f,
         animationSpec = tween(300)
     )
 
     val showLabelEmptyTextOffSetY by animateDpAsState(
-        targetValue = if (showLabelEmptyText) 0.dp else 10.dp,
+        targetValue = if (textNotEntered) 0.dp else 10.dp,
+        animationSpec = tween(300)
+    )
+
+    //// анимация подсчета введенного текста
+    val showLabelCounterTextAlpha by animateFloatAsState(
+        targetValue = if (textEntered) 1f else 0f,
         animationSpec = tween(300)
     )
 
@@ -151,26 +132,6 @@ fun CreateItemScreen() {
                     Box(
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        /*Box(
-                            modifier = Modifier
-                                .size(40.dp)
-                                .align(Alignment.CenterStart)
-                                .shadow(
-                                    elevation = 8.dp,
-                                    shape = RoundedCornerShape(10.dp),
-                                    clip = false
-                                )
-                                .clip(RoundedCornerShape(10.dp))
-                                .background(Color.White)
-                                .clickable { /* onClick */ },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.arrow),
-                                contentDescription = null,
-                                modifier = Modifier.size(22.dp)
-                            )
-                        }*/
                         Button(
                             onClick = {
 
@@ -312,6 +273,8 @@ fun CreateItemScreen() {
 
                     singleLine = true,
 
+                    isError = textNotEntered,
+
                     textStyle = TextStyle(
                         fontSize = 18.sp,
                         color = Color.Black
@@ -331,32 +294,59 @@ fun CreateItemScreen() {
 
                     shape = RoundedCornerShape(12.dp),
 
+
                     colors = TextFieldDefaults.colors(
-                        focusedIndicatorColor = borderColorTextField,
-                        unfocusedIndicatorColor = borderColorTextField,
-                        cursorColor = Color.DarkGray
+                        focusedIndicatorColor = Color.Blue,
+                        unfocusedIndicatorColor = Color.Gray,
+                        errorIndicatorColor = Color.Red,
+                        cursorColor = Color.DarkGray,
+                        errorCursorColor = Color.DarkGray,
+                        errorContainerColor = Color(0xFFFFFFFF),
+                        focusedContainerColor = Color(0xFFFFFFFF),
+                        unfocusedContainerColor = Color(0xFFFFFFFF)
+
+                        //borderColorTextField
                     )
                 )
 
-                Text(
-                    text = stringResource(id = R.string.enter_product),
-                    fontSize = 12.sp,
-                    color = Color.Red,
-                    fontWeight = FontWeight.Medium,
-                    modifier = Modifier
-                        .padding(start = 4.dp, top = 8.dp)
-                        .graphicsLayer {
-                            alpha = showLabelEmptyTextAlpha
-                            translationY = showLabelEmptyTextOffSetY.toPx()
-                        }
-                )
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp)
+                ) {
+                    Text(
+                        text = stringResource(id = R.string.enter_product),
+                        fontSize = 12.sp,
+                        color = Color.Red,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier
+                            .padding(start = 4.dp)
+                            .graphicsLayer {
+                                alpha = showLabelEmptyTextAlpha
+                                translationY = showLabelEmptyTextOffSetY.toPx()
+                            }
+                    )
+
+                    Spacer(modifier = Modifier.weight(1f))
+
+                    Text(
+                        text = "12/105",
+                        fontSize = 14.sp,
+                        color = Color.DarkGray,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier
+                            .padding(end = 4.dp)
+                            .graphicsLayer {
+                                alpha = showLabelCounterTextAlpha
+                            }
+
+                    )
+                }
+
             }
 
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
+            Spacer(modifier = Modifier.weight(1f))
 
-            }
             val context = LocalContext.current
 
             Button(
