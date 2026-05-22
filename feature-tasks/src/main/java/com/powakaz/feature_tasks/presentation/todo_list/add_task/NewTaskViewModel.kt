@@ -23,7 +23,8 @@ data class TaskUiState(
     val isLoading: Boolean = false,
     val isNeedShowNetErrorToast: Boolean = false,
     val isNeedShowExceptionToast: Boolean = false,
-    val toastDelay: Long = 3_000L
+    val toastDelay: Long = 3_000L,
+    val isSuccessSaved : Boolean = false
 ) {
 
     var isHeadVisible = !wasFocusedOnce
@@ -40,6 +41,8 @@ sealed interface TaskUiEvent {
     object SaveClicked : TaskUiEvent
     object ExceptionToastClose : TaskUiEvent
     object ErrorToastClose : TaskUiEvent
+    object ClickOkButton : TaskUiEvent
+    object ClickBackButton : TaskUiEvent
 }
 
 
@@ -89,6 +92,16 @@ class NewTaskViewModel @Inject constructor(private val addTodoItemsUseCase: AddT
                     it.copy(isNeedShowExceptionToast = false)
                 }
             }
+
+
+            TaskUiEvent.ClickOkButton -> {
+
+            }
+
+
+            TaskUiEvent.ClickBackButton -> {
+
+            }
         }
     }
 
@@ -108,7 +121,9 @@ class NewTaskViewModel @Inject constructor(private val addTodoItemsUseCase: AddT
 
                 when (response) {
                     is NetworkResult.Success -> {
-
+                        _uiState.update {
+                            it.copy(isSuccessSaved = true)
+                        }
                     }
 
                     is NetworkResult.Error -> {
@@ -132,7 +147,8 @@ class NewTaskViewModel @Inject constructor(private val addTodoItemsUseCase: AddT
                         _uiState.update {
                             it.copy(
                                 isNeedShowExceptionToast = true,
-                                isLoading = false)
+                                isLoading = false
+                            )
                         }
 
                         viewModelScope.launch {

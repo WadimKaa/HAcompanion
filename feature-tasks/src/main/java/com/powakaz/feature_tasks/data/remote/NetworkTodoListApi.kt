@@ -16,7 +16,7 @@ interface NetworkTodoListApi {
     ): TodoItemsResponseDto
 
 
-    @POST("api/services/todo/add_item?return_response")
+    @POST("api/services/todo/add_item")
     suspend fun addTodoItem(
         @Body addItemBody: AddItemBody
     ): List<InfoEntityDto>

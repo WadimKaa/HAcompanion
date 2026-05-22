@@ -38,6 +38,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
@@ -68,8 +69,7 @@ fun TaskContentPreview() {
     // Создаем фейковое состояние для отображения в превью
     val fakeState = TaskUiState(
         taskName = "Купить мо",
-        wasFocusedOnce = false,
-        isNeedShowNetErrorToast = true
+        isSuccessSaved = true
     )
 
     TaskContent(
@@ -81,40 +81,80 @@ fun TaskContentPreview() {
 
 @Composable
 fun TaskContent(inputState: TaskUiState, onEvent: (TaskUiEvent) -> Unit) {
+    var backgroundColor = if (inputState.isSuccessSaved) Color(0xFFf3fdf7) else Color(0xFFfdfdfd)
+
     Scaffold(
         topBar = {
             TopBar(stringResource(R.string.create_task))
-        }
+        },
+        containerColor = backgroundColor
     ) { paddingValues ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            Column(
-                modifier = Modifier
-                    .align(alignment = Alignment.Center)
-                    .padding(bottom = 98.dp)
-            ) {
-                AnimatedVisibility(visible = inputState.isHeadVisible) {
-                    Head()
-                }
-                TextInput(
-                    inputState = inputState,
-                    onTaskNamedChanged = {
-                        onEvent(TaskUiEvent.TaskNameChanged(it))
-                    },
-                    onFocusChanged = {
-                        onEvent(TaskUiEvent.FocusChanged(it))
+            if (!inputState.isSuccessSaved) {
+                Column(
+                    modifier = Modifier
+                        .align(alignment = Alignment.Center)
+                        .padding(bottom = 98.dp)
+                ) {
+                    AnimatedVisibility(visible = inputState.isHeadVisible) {
+                        Head()
                     }
-                )
-                if (inputState.isError) {
-                    ErrorMessage(inputState)
+                    TextInput(
+                        inputState = inputState,
+                        onTaskNamedChanged = {
+                            onEvent(TaskUiEvent.TaskNameChanged(it))
+                        },
+                        onFocusChanged = {
+                            onEvent(TaskUiEvent.FocusChanged(it))
+                        }
+                    )
+                    if (inputState.isError) {
+                        ErrorMessage(inputState)
+                    }
                 }
+                ButtonSave(inputState, onClickButtonSave = {
+                    onEvent(TaskUiEvent.SaveClicked)
+                })
+            } else {
+                Column(modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 64.dp)) {
+                    Image(
+                        painter = painterResource(R.drawable.img_succes_saved),
+                        contentDescription = "",
+                        modifier = Modifier
+                            .size(320.dp)
+                            .align(Alignment.CenterHorizontally)
+                    )
+                    Text(
+                        text = "Дело сохранено!",
+                        modifier = Modifier
+                            .align(Alignment.CenterHorizontally)
+                            .padding(bottom = 8.dp),
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 20.sp
+                    )
+                    Text(
+                        text = "\"${inputState.taskName}\" добавлено в ваш список дел",
+                        modifier = Modifier
+                            .align(Alignment.CenterHorizontally)
+                            .padding(start = 32.dp, end = 32.dp, bottom = 32.dp),
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 16.sp,
+                        textAlign = TextAlign.Center
+                    )
+                }
+
+
+
+                ButtonOk(onClickButtonOk = {
+                    onEvent(TaskUiEvent.ClickOkButton)
+                })
             }
-            ButtonSave(inputState, onClickButtonSave = {
-                onEvent(TaskUiEvent.SaveClicked)
-            })
             AnimatedVisibility(
                 visible = inputState.isNeedShowNetErrorToast,
                 modifier = Modifier.align(
@@ -122,7 +162,6 @@ fun TaskContent(inputState: TaskUiState, onEvent: (TaskUiEvent) -> Unit) {
                 )
             ) {
                 NetErrorToast(onCloseClick = { onEvent(TaskUiEvent.ErrorToastClose) })
-
                 DisposableEffect(Unit) {
                     onDispose {
                         onEvent(TaskUiEvent.ErrorToastClose)
@@ -133,7 +172,6 @@ fun TaskContent(inputState: TaskUiState, onEvent: (TaskUiEvent) -> Unit) {
 
             AnimatedVisibility(
                 visible = inputState.isNeedShowExceptionToast,
-
                 modifier = Modifier.align(
                     Alignment.BottomCenter
                 )
@@ -146,6 +184,31 @@ fun TaskContent(inputState: TaskUiState, onEvent: (TaskUiEvent) -> Unit) {
                 }
             }
         }
+    }
+}
+
+@Composable
+fun BoxScope.ButtonOk(onClickButtonOk: () -> Unit) {
+    Button(
+        onClick = {
+            onClickButtonOk()
+        },
+        colors = ButtonDefaults.buttonColors(
+            contentColor = Color(0xFFFFFFFF),
+            containerColor = Color(0xFF3ac765),
+        ),
+        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier
+            .align(Alignment.BottomCenter)
+            .padding(start = 16.dp, end = 16.dp, bottom = 24.dp)
+            .fillMaxWidth()
+            .height(56.dp)
+    ) {
+        Text(
+            text = "Готово",
+            fontSize = 16.sp,
+            fontWeight = FontWeight.SemiBold
+        )
     }
 }
 
