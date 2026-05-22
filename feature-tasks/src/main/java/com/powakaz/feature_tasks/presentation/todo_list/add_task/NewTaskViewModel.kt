@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.powakaz.core_network.model.NetworkResult
 import com.powakaz.feature_tasks.domain.usecase.AddTodoItemsUseCase
+import com.powakaz.feature_tasks.domain.usecase.DeleteTodoItemUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -47,7 +48,7 @@ sealed interface TaskUiEvent {
 
 
 @HiltViewModel
-class NewTaskViewModel @Inject constructor(private val addTodoItemsUseCase: AddTodoItemsUseCase) :
+class NewTaskViewModel @Inject constructor(private val addTodoItemsUseCase: AddTodoItemsUseCase, private val deleteTodoItemUseCase: DeleteTodoItemUseCase) :
     ViewModel() {
     private val _uiState = MutableStateFlow(TaskUiState())
     val uiState: StateFlow<TaskUiState> = _uiState.asStateFlow()
@@ -106,6 +107,7 @@ class NewTaskViewModel @Inject constructor(private val addTodoItemsUseCase: AddT
     }
 
 
+
     private fun saveTask() {
         val currentState = _uiState.value
         if (currentState.canSave) {
@@ -136,7 +138,6 @@ class NewTaskViewModel @Inject constructor(private val addTodoItemsUseCase: AddT
 
                         viewModelScope.launch {
                             delay(currentState.toastDelay)
-
                             _uiState.update {
                                 it.copy(isNeedShowNetErrorToast = false)
                             }
@@ -153,7 +154,6 @@ class NewTaskViewModel @Inject constructor(private val addTodoItemsUseCase: AddT
 
                         viewModelScope.launch {
                             delay(currentState.toastDelay)
-
                             _uiState.update {
                                 it.copy(isNeedShowExceptionToast = false)
                             }

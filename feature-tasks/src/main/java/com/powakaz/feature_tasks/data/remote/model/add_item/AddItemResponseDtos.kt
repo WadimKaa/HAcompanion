@@ -1,4 +1,4 @@
-package com.powakaz.feature_tasks.data.remote.model
+package com.powakaz.feature_tasks.data.remote.model.add_item
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -7,6 +7,7 @@ import kotlinx.serialization.Serializable
 
 
 @Serializable
+
 data class InfoEntityDto(
     @SerialName("entity_id")
     val entityId : String,

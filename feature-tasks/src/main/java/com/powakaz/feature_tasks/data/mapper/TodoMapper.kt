@@ -1,8 +1,7 @@
 package com.powakaz.feature_tasks.data.mapper
 
-import com.powakaz.feature_tasks.data.remote.model.InfoEntityDto
-import com.powakaz.feature_tasks.data.remote.model.TodoItemDto
-import com.powakaz.feature_tasks.data.remote.model.TodoItemsResponseDto
+import com.powakaz.feature_tasks.data.remote.model.add_item.InfoEntityDto
+import com.powakaz.feature_tasks.data.remote.model.get_items.TodoItemDto
 import com.powakaz.feature_tasks.domain.model.Response
 import com.powakaz.feature_tasks.domain.model.TodoItem
 

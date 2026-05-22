@@ -7,4 +7,5 @@ import com.powakaz.feature_tasks.domain.model.TodoItem
 interface TodoRepository {
     suspend fun getTodoItems(listName: String): NetworkResult<List<TodoItem>>
     suspend fun addTodoItem(entityName: String, listName : String) : NetworkResult<Response>
+    suspend fun deleteTodoItem(entityId: String) : NetworkResult<Response>
 }

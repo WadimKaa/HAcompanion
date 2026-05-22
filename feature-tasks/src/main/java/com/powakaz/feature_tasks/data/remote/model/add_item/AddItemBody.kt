@@ -1,9 +1,7 @@
-package com.powakaz.feature_tasks.data.remote.model
+package com.powakaz.feature_tasks.data.remote.model.add_item
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import java.io.Serial
-
 
 @Serializable
 class AddItemBody(
