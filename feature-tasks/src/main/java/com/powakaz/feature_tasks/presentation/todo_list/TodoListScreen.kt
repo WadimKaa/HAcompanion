@@ -25,7 +25,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -54,21 +53,24 @@ fun TodoListContentPreview(
 ) {
     TodoListContent(
         inputState = TodoListState(
-            listOf(
+            unCompletedItems = listOf(
                 TodoItem("", "hui", false),
                 TodoItem("", "pizda", false)
+            ),
+            completedItems = listOf(
+                TodoItem("", "ne_hui", true),
+                TodoItem("", "i_ne_pizda", true)
             )
         ),
         onEvent = {}
     )
-
 }
 
 @Composable
 fun TodoListContent(inputState: TodoListState, onEvent: (TodoListUIEvent) -> Unit) {
     Scaffold(
         topBar = {
-            TodoListTopBar(stringResource(R.string.create_task))
+            TodoListTopBar(title = "Задачи")
         },
         containerColor = Color(0xFFfdfdfd)
     ) { paddingValues ->
@@ -77,50 +79,19 @@ fun TodoListContent(inputState: TodoListState, onEvent: (TodoListUIEvent) -> Uni
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
+
             LazyColumn(modifier = Modifier.padding(top = 16.dp)) {
                 item {
-                    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(start = 4.dp, end = 4.dp)
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_circle_todos_list),
-                            contentDescription = null,
-                            modifier = Modifier
-                                .align(Alignment.CenterVertically)
-                                .size(42.dp)
-                                .padding(start = 4.dp),
-                            tint = Color(0xFF8690ff)
-                        )
-                        Column(
-                            modifier = Modifier
-                                .weight(1f)
-                                .padding(top = 8.dp, bottom = 8.dp, start = 8.dp)
-                        ) {
-                            Text(
-                                text = "Активные",
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = Color(0xFF050810),
-                                modifier = Modifier.padding(bottom = 2.dp)
-                            )
-                            Text(text = inputState.unCompletedItemsSize, fontSize = 16.sp, color = Color(0xFF9c9aa6))
-                        }
-                        Icon(
-                            imageVector = Icons.Default.KeyboardArrowDown,
-                            contentDescription = null,
-                            tint = Color(0xFF8e8d9e),
-                            modifier = Modifier
-                                .align(Alignment.CenterVertically)
-                                .padding(end = 16.dp)
-                                .size(36.dp)
-                        )
-                    }
+                    UncompletedListHead(inputState.unCompletedItemsSize)
                 }
                 items(inputState.unCompletedItems.size) { index ->
-                    UnCompletedTaskItem(inputState, index)
+                    UnCompletedTaskItem(inputState.unCompletedItems[index], index)
+                }
+                item {
+                    CompletedListHead(inputState.completedItemsSize)
+                }
+                items(count = inputState.completedItems.size) { index ->
+                    CompletedTaskItem(inputState.completedItems[index], index)
                 }
             }
 
@@ -130,7 +101,129 @@ fun TodoListContent(inputState: TodoListState, onEvent: (TodoListUIEvent) -> Uni
 }
 
 @Composable
-fun UnCompletedTaskItem(inputState: TodoListState, index: Int) {
+fun CompletedTaskItem(item: TodoItem, index: Int) {
+    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 8.dp, bottom = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            painter = painterResource(R.drawable.ic_tasks_completed_list_item),
+            contentDescription = null,
+            tint = Color.Unspecified,
+            modifier = Modifier
+                .padding(start = 16.dp)
+                .size(36.dp)
+        )
+        Text(
+            text = item.title,
+            fontWeight = FontWeight.SemiBold,
+            color = Color(0xFF131826),
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = 8.dp)
+        )
+        Icon(
+            imageVector = Icons.AutoMirrored.Default.KeyboardArrowRight,
+            contentDescription = null,
+            tint = Color(0xFF9190a3),
+            modifier = Modifier
+                .padding(end = 16.dp)
+                .size(36.dp)
+        )
+    }
+}
+
+@Composable
+fun CompletedListHead(size: String) {
+    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 4.dp, end = 4.dp)
+    ) {
+        Icon(
+            painter = painterResource(R.drawable.ic_tasks_completed_task),
+            contentDescription = null,
+            modifier = Modifier
+                .align(Alignment.CenterVertically)
+                .size(42.dp)
+                .padding(start = 4.dp),
+            tint = Color(0xFF2EC14D)
+        )
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(top = 8.dp, bottom = 8.dp, start = 8.dp)
+        ) {
+            Text(
+                text = "Завершенные",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Color(0xFF050810),
+                modifier = Modifier.padding(bottom = 2.dp)
+            )
+            Text(text = size, fontSize = 16.sp, color = Color(0xFF9c9aa6))
+        }
+        Icon(
+            imageVector = Icons.Default.KeyboardArrowDown,
+            contentDescription = null,
+            tint = Color(0xFF8e8d9e),
+            modifier = Modifier
+                .align(Alignment.CenterVertically)
+                .padding(end = 16.dp)
+                .size(36.dp)
+        )
+    }
+}
+
+@Composable
+fun UncompletedListHead(size: String) {
+    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 4.dp, end = 4.dp)
+    ) {
+        Icon(
+            painter = painterResource(R.drawable.ic_circle_todos_list),
+            contentDescription = null,
+            modifier = Modifier
+                .align(Alignment.CenterVertically)
+                .size(42.dp)
+                .padding(start = 4.dp),
+            tint = Color(0xFF8690ff)
+        )
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(top = 8.dp, bottom = 8.dp, start = 8.dp)
+        ) {
+            Text(
+                text = "Активные",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Color(0xFF050810),
+                modifier = Modifier.padding(bottom = 2.dp)
+            )
+            Text(text = size, fontSize = 16.sp, color = Color(0xFF9c9aa6))
+        }
+        Icon(
+            imageVector = Icons.Default.KeyboardArrowDown,
+            contentDescription = null,
+            tint = Color(0xFF8e8d9e),
+            modifier = Modifier
+                .align(Alignment.CenterVertically)
+                .padding(end = 16.dp)
+                .size(36.dp)
+        )
+    }
+}
+
+@Composable
+fun UnCompletedTaskItem(item: TodoItem, index: Int) {
     HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
     Row(
         modifier = Modifier
@@ -147,7 +240,7 @@ fun UnCompletedTaskItem(inputState: TodoListState, index: Int) {
                 .size(36.dp)
         )
         Text(
-            text = inputState.unCompletedItems[index].title,
+            text = item.title,
             fontWeight = FontWeight.SemiBold,
             color = Color(0xFF131826),
             modifier = Modifier
