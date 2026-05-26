@@ -4,17 +4,9 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Button
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
-import com.powakaz.feature_tasks.presentation.todo_list.add_task.TaskScreen
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.powakaz.hacompanion.ui.theme.HAcompanionTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -26,38 +18,9 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             HAcompanionTheme {
-                TaskScreen()
+
             }
         }
 
-    }
-}
-
-
-
-
-
-@Composable
-fun DebugCounterScreen() {
-
-    println("🔵 DebugCounterScreen ВЫЗВАН")
-
-    var count by remember { mutableStateOf(0) }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-
-    ) {
-        Text("Счёт: $count", modifier = Modifier.fillMaxSize(), )
-
-        Button(
-            onClick = {
-                count++
-                println("🟢 Кнопка нажата, count = $count")
-            }
-        ) {
-            Text("Увеличить")
-        }
     }
 }
