@@ -4,4 +4,6 @@ sealed class InputStateTextField {
     object StartInputField : InputStateTextField()
     object EmptyInputField : InputStateTextField()
     object NotEmptyInputField : InputStateTextField()
+
+    object MoreCharactersLimit : InputStateTextField()
 }

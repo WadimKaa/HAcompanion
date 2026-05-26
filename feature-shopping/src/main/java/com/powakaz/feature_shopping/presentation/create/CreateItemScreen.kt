@@ -4,9 +4,13 @@ import android.annotation.SuppressLint
 import android.widget.Toast
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.copy
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -17,6 +21,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -25,6 +30,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldColors
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -34,6 +40,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
@@ -56,23 +63,35 @@ import com.powakaz.feature_shopping.presentation.input.InputStateTextField
 @Composable
 fun CreateItemScreen() {
 
+    val maxCharCount = 30
     var text by remember { mutableStateOf("") }
     var isTouched by remember { mutableStateOf(false) }
 
 
     val stateText = when {
+        text.length > maxCharCount -> InputStateTextField.MoreCharactersLimit
         text.isNotBlank() -> InputStateTextField.NotEmptyInputField
         isTouched && text.isBlank() -> InputStateTextField.EmptyInputField
         else -> InputStateTextField.StartInputField
     }
 
-    val textEntered = stateText is InputStateTextField.NotEmptyInputField
+    val textEnteredCorrect = stateText is InputStateTextField.NotEmptyInputField
     val textNotEntered = stateText is InputStateTextField.EmptyInputField
     val showStartHeader = stateText is InputStateTextField.StartInputField
     val showLabel =
-        stateText is InputStateTextField.NotEmptyInputField || stateText is InputStateTextField.EmptyInputField
+        stateText is InputStateTextField.NotEmptyInputField
+                || stateText is InputStateTextField.EmptyInputField
+                || stateText is InputStateTextField.MoreCharactersLimit
+    val moreCharactersLimit = stateText is InputStateTextField.MoreCharactersLimit
+    val textEntered =
+        stateText is InputStateTextField.NotEmptyInputField || stateText is InputStateTextField.MoreCharactersLimit
 
-
+    val fillColor = when (stateText) {
+        InputStateTextField.MoreCharactersLimit -> Color(0xFFFF9800)
+        InputStateTextField.NotEmptyInputField -> Color(0xFF553FB5)
+        InputStateTextField.EmptyInputField -> Color.Red
+        InputStateTextField.StartInputField -> Color.DarkGray
+    }
 
     val topSpacer by animateDpAsState(
         targetValue = if (showLabel) 0.dp else 60.dp
@@ -252,12 +271,13 @@ fun CreateItemScreen() {
                 OutlinedTextField(
                     value = text,
                     onValueChange = {
-                        text = it
                         isTouched = true
+                        text = it
+
                     },
 
                     trailingIcon = {
-                        if (textEntered) {
+                        if (textEnteredCorrect || moreCharactersLimit) {
                             Icon(
                                 painter = painterResource(id = R.drawable.close),
                                 contentDescription = "Очистить",
@@ -296,16 +316,16 @@ fun CreateItemScreen() {
 
 
                     colors = TextFieldDefaults.colors(
-                        focusedIndicatorColor = Color.Blue,
-                        unfocusedIndicatorColor = Color.Gray,
-                        errorIndicatorColor = Color.Red,
+                        focusedIndicatorColor = fillColor,
+                        unfocusedIndicatorColor = fillColor,
+                        errorIndicatorColor = fillColor,
+
                         cursorColor = Color.DarkGray,
                         errorCursorColor = Color.DarkGray,
                         errorContainerColor = Color(0xFFFFFFFF),
                         focusedContainerColor = Color(0xFFFFFFFF),
                         unfocusedContainerColor = Color(0xFFFFFFFF)
 
-                        //borderColorTextField
                     )
                 )
 
@@ -330,9 +350,13 @@ fun CreateItemScreen() {
                     Spacer(modifier = Modifier.weight(1f))
 
                     Text(
-                        text = "12/105",
+                        text = "${text.length}/$maxCharCount",
                         fontSize = 14.sp,
-                        color = Color.DarkGray,
+                        color = if (moreCharactersLimit) {
+                            Color(0xFFFF9800)
+                        } else {
+                            Color.DarkGray
+                        },
                         fontWeight = FontWeight.Medium,
                         modifier = Modifier
                             .padding(end = 4.dp)
@@ -341,6 +365,39 @@ fun CreateItemScreen() {
                             }
 
                     )
+                }
+
+                if (moreCharactersLimit) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(80.dp)
+                            .padding(top = 18.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color(0x9AFFC36F)),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    )
+                    {
+                        Icon(
+                            painter = painterResource(id = R.drawable.warning),
+                            contentDescription = null,
+                            tint = Color(0xFFFF9800),
+                            modifier = Modifier
+                                .size(24.dp)
+
+                        )
+
+                        Spacer(modifier = Modifier.width(8.dp))
+
+                        Text(
+                            text = stringResource(id = R.string.warning_text),
+                            color = Color(0xFFFF9800),
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+
+                    }
                 }
 
             }
@@ -355,10 +412,11 @@ fun CreateItemScreen() {
                         .makeText(context, "Сохранено", Toast.LENGTH_SHORT)
                         .show()
                 },
-                enabled = textEntered,
+                enabled = textEnteredCorrect,
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Blue
+                    containerColor = fillColor,
+                    disabledContainerColor = fillColor
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
