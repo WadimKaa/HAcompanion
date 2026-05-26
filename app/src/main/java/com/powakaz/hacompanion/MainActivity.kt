@@ -7,6 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.powakaz.feature_tasks.presentation.todo_list.TodoListScreen
 import com.powakaz.hacompanion.ui.theme.HAcompanionTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -18,7 +19,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             HAcompanionTheme {
-
+                TodoListScreen()
             }
         }
 

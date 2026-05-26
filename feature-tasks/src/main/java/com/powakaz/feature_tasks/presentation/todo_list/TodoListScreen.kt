@@ -2,12 +2,19 @@ package com.powakaz.feature_tasks.presentation.todo_list
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
@@ -26,6 +33,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.powakaz.feature_tasks.R
+import com.powakaz.feature_tasks.domain.model.TodoItem
 
 @Composable
 fun TodoListScreen(
@@ -45,7 +53,12 @@ fun TodoListScreen(
 fun TodoListContentPreview(
 ) {
     TodoListContent(
-        inputState = TodoListState(),
+        inputState = TodoListState(
+            listOf(
+                TodoItem("", "hui", false),
+                TodoItem("", "pizda", false)
+            )
+        ),
         onEvent = {}
     )
 
@@ -64,10 +77,92 @@ fun TodoListContent(inputState: TodoListState, onEvent: (TodoListUIEvent) -> Uni
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
+            LazyColumn(modifier = Modifier.padding(top = 16.dp)) {
+                item {
+                    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 4.dp, end = 4.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_circle_todos_list),
+                            contentDescription = null,
+                            modifier = Modifier
+                                .align(Alignment.CenterVertically)
+                                .size(42.dp)
+                                .padding(start = 4.dp),
+                            tint = Color(0xFF8690ff)
+                        )
+                        Column(
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(top = 8.dp, bottom = 8.dp, start = 8.dp)
+                        ) {
+                            Text(
+                                text = "Активные",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color(0xFF050810),
+                                modifier = Modifier.padding(bottom = 2.dp)
+                            )
+                            Text(text = inputState.unCompletedItemsSize, fontSize = 16.sp, color = Color(0xFF9c9aa6))
+                        }
+                        Icon(
+                            imageVector = Icons.Default.KeyboardArrowDown,
+                            contentDescription = null,
+                            tint = Color(0xFF8e8d9e),
+                            modifier = Modifier
+                                .align(Alignment.CenterVertically)
+                                .padding(end = 16.dp)
+                                .size(36.dp)
+                        )
+                    }
+                }
+                items(inputState.unCompletedItems.size) { index ->
+                    UnCompletedTaskItem(inputState, index)
+                }
+            }
 
         }
     }
 
+}
+
+@Composable
+fun UnCompletedTaskItem(inputState: TodoListState, index: Int) {
+    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 8.dp, bottom = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            painter = painterResource(R.drawable.ic_circle_todos_list),
+            contentDescription = null,
+            tint = Color(0xFFd0cbf7),
+            modifier = Modifier
+                .padding(start = 16.dp)
+                .size(36.dp)
+        )
+        Text(
+            text = inputState.unCompletedItems[index].title,
+            fontWeight = FontWeight.SemiBold,
+            color = Color(0xFF131826),
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = 8.dp)
+        )
+        Icon(
+            imageVector = Icons.AutoMirrored.Default.KeyboardArrowRight,
+            contentDescription = null,
+            tint = Color(0xFF9190a3),
+            modifier = Modifier
+                .padding(end = 16.dp)
+                .size(36.dp)
+        )
+    }
 }
 
 
@@ -82,9 +177,16 @@ fun TodoListTopBar(title: String) {
     ) {
         IconButton(
             onClick = {},
-            modifier = Modifier.align(Alignment.CenterEnd).background(color = Color(0xFFe5e3fd), shape = CircleShape).size(36.dp)
+            modifier = Modifier
+                .align(Alignment.CenterEnd)
+                .background(color = Color(0xFFe5e3fd), shape = CircleShape)
+                .size(36.dp)
         ) {
-            Icon(painter = painterResource(R.drawable.ic_plus), contentDescription = null, tint = Color(0xFF6651f7))
+            Icon(
+                painter = painterResource(R.drawable.ic_plus),
+                contentDescription = null,
+                tint = Color(0xFF6651f7)
+            )
         }
 
         Text(

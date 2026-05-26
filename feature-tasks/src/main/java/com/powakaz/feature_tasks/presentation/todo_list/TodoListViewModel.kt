@@ -6,19 +6,23 @@ import com.powakaz.core_network.model.NetworkResult
 import com.powakaz.feature_tasks.domain.model.TodoItem
 import com.powakaz.feature_tasks.domain.usecase.GetTodoItemsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 
 
-
 data class TodoListState(
-    val test : String = ""
-)
+    val unCompletedItems: List<TodoItem> = emptyList(),
+    val completedItems: List<TodoItem> = emptyList(),
+) {
+    val unCompletedItemsSize: String = unCompletedItems.size.toString()
+    val completedItemsSize: String = completedItems.size.toString()
+}
 
-sealed interface TodoListUIEvent{
+sealed interface TodoListUIEvent {
 
 }
 
@@ -26,11 +30,33 @@ sealed interface TodoListUIEvent{
 class TodoListViewModel @Inject constructor(private val todoItemsUseCase: GetTodoItemsUseCase) :
     ViewModel() {
 
-    private val _state = MutableStateFlow(TodoListState())
-    val state = _state.asStateFlow()
+    val state: StateFlow<TodoListState> = flow {
+        val result = todoItemsUseCase("todo.moi_dela")
+        emit(result)
+    }.map { result ->
+        when (result) {
+            is NetworkResult.Success -> {
+                val (completed, uncompleted) = result.data.partition { it.isCompleted }
+                TodoListState(completedItems = completed, unCompletedItems = uncompleted)
+            }
+
+            is NetworkResult.Error -> {
+                TodoListState()
+            }
+
+            is NetworkResult.Exception -> {
+                TodoListState()
+            }
+
+        }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = TodoListState() // С чего начинаем
+    )
 
 
-    fun onEvent(todoListUIEvent: TodoListUIEvent){
+    fun onEvent(todoListUIEvent: TodoListUIEvent) {
 
     }
 
