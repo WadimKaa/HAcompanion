@@ -13,5 +13,9 @@
     <string name="enter_product">Введите название товара</string>
     <string name="warning_text">Превышен лимит в 30 символов</string>
 
+    <string name="product_is_saved">Товар сохранен!</string>
+    <string name="ready">Готово</string>
+
+
 </resources>
 

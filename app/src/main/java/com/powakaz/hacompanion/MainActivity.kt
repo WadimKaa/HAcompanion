@@ -4,11 +4,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.viewModels
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import com.powakaz.feature_shopping.presentation.ShoppingListScreen
-import com.powakaz.feature_shopping.presentation.ShoppingViewModel
 import com.powakaz.feature_shopping.presentation.create.CreateItemScreen
 import com.powakaz.hacompanion.ui.theme.HAcompanionTheme
 import dagger.hilt.android.AndroidEntryPoint
