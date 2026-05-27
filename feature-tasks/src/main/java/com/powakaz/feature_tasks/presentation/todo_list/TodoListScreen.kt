@@ -34,14 +34,22 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.powakaz.feature_tasks.R
 import com.powakaz.feature_tasks.domain.model.TodoItem
 
+
+sealed interface TodoListScreenAction {
+    data class OnOpenTask(val id: String) : TodoListScreenAction
+    object OnCreateTask : TodoListScreenAction
+}
+
 @Composable
 fun TodoListScreen(
-    viewModel: TodoListViewModel = hiltViewModel()
+    viewModel: TodoListViewModel = hiltViewModel(),
+    onAction: (TodoListScreenAction) -> Unit
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     TodoListContent(
         inputState = state,
-        onEvent = viewModel::onEvent
+        onEvent = viewModel::onEvent,
+        onAction
     )
 
 }
@@ -62,15 +70,20 @@ fun TodoListContentPreview(
                 TodoItem("", "i_ne_pizda", true)
             )
         ),
-        onEvent = {}
+        onEvent = {},
+        onAction = {}
     )
 }
 
 @Composable
-fun TodoListContent(inputState: TodoListState, onEvent: (TodoListUIEvent) -> Unit) {
+fun TodoListContent(
+    inputState: TodoListState,
+    onEvent: (TodoListUIEvent) -> Unit,
+    onAction: (TodoListScreenAction) -> Unit
+) {
     Scaffold(
         topBar = {
-            TodoListTopBar(title = "Задачи")
+            TodoListTopBar(title = "Задачи", onAction)
         },
         containerColor = Color(0xFFfdfdfd)
     ) { paddingValues ->
@@ -260,7 +273,7 @@ fun UnCompletedTaskItem(item: TodoItem, index: Int) {
 
 
 @Composable
-fun TodoListTopBar(title: String) {
+fun TodoListTopBar(title: String, onAction: (TodoListScreenAction) -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -269,7 +282,7 @@ fun TodoListTopBar(title: String) {
 
     ) {
         IconButton(
-            onClick = {},
+            onClick = { onAction(TodoListScreenAction.OnCreateTask) },
             modifier = Modifier
                 .align(Alignment.CenterEnd)
                 .background(color = Color(0xFFe5e3fd), shape = CircleShape)

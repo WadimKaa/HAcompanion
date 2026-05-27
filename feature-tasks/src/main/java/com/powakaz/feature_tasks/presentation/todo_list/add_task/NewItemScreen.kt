@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -38,7 +37,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
@@ -53,13 +52,22 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.powakaz.feature_tasks.R
 
 
+sealed interface TaskScreenAction {
+    object OnBack : TaskScreenAction
+}
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TaskScreen(viewModel: NewTaskViewModel = hiltViewModel()) {
+fun TaskScreen(
+    viewModel: NewTaskViewModel = hiltViewModel(),
+    onAction: (TaskScreenAction) -> Unit
+) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     TaskContent(
         inputState = state,
-        onEvent = viewModel::onEvent
+        onEvent = viewModel::onEvent,
+        onAction
     )
 }
 
@@ -74,18 +82,25 @@ fun TaskContentPreview() {
 
     TaskContent(
         inputState = fakeState,
-        onEvent = {}
+        onEvent = {},
+        onAction = {}
     )
 }
 
 
 @Composable
-fun TaskContent(inputState: TaskUiState, onEvent: (TaskUiEvent) -> Unit) {
+fun TaskContent(
+    inputState: TaskUiState,
+    onEvent: (TaskUiEvent) -> Unit,
+    onAction: (TaskScreenAction) -> Unit
+) {
     var backgroundColor = if (inputState.isSuccessSaved) Color(0xFFf3fdf7) else Color(0xFFfdfdfd)
 
     Scaffold(
         topBar = {
-            TopBar(stringResource(R.string.create_task))
+            TopBar(stringResource(R.string.create_task), onClickBackButton = {
+                onAction(TaskScreenAction.OnBack)
+            })
         },
         containerColor = backgroundColor
     ) { paddingValues ->
@@ -120,9 +135,11 @@ fun TaskContent(inputState: TaskUiState, onEvent: (TaskUiEvent) -> Unit) {
                     onEvent(TaskUiEvent.SaveClicked)
                 })
             } else {
-                Column(modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 64.dp)) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 64.dp)
+                ) {
                     Image(
                         painter = painterResource(R.drawable.img_succes_saved),
                         contentDescription = "",
@@ -477,7 +494,7 @@ fun ErrorMessage(inputState: TaskUiState) {
 
 
 @Composable
-fun TopBar(title: String) {
+fun TopBar(title: String, onClickBackButton: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -492,7 +509,9 @@ fun TopBar(title: String) {
             shadowElevation = 2.dp,
             modifier = Modifier.size(height = 36.dp, width = 36.dp)
         ) {
-            Box() {
+            Box(modifier = Modifier.clickable(onClick = {
+                onClickBackButton()
+            })) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = null,
