@@ -1,5 +1,6 @@
 package com.powakaz.feature_shopping.data.api
 
+import com.powakaz.feature_shopping.data.model.AddShoppingItemRequest
 import com.powakaz.feature_shopping.data.model.ServiceResponseDto
 import com.powakaz.feature_shopping.data.model.ShoppingItemDto
 import com.powakaz.feature_shopping.data.model.ShoppingItemsResponseDto
@@ -15,4 +16,8 @@ interface ShoppingApi {
         @Body request: TodoRequest
     ): ShoppingItemsResponseDto
 
+    @POST("api/services/todo/add_item")
+    suspend fun addShoppingItem(
+        @Body request: AddShoppingItemRequest
+    )
 }
