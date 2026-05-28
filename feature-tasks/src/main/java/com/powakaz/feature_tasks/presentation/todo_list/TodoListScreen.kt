@@ -1,6 +1,9 @@
 package com.powakaz.feature_tasks.presentation.todo_list
 
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
@@ -21,8 +25,11 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -33,6 +40,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.powakaz.feature_tasks.R
 import com.powakaz.feature_tasks.domain.model.TodoItem
+import androidx.compose.foundation.lazy.items
 
 
 sealed interface TodoListScreenAction {
@@ -95,10 +103,15 @@ fun TodoListContent(
 
             LazyColumn(modifier = Modifier.padding(top = 16.dp)) {
                 item {
-                    UncompletedListHead(inputState.unCompletedItemsSize)
+                    UncompletedListHead(
+                        inputState.unCompletedItemsSize,
+                        isExpanded = inputState.isUnCompletedListExpanded,
+                        onClickExpand = { onEvent(TodoListUIEvent.ChangeExpandUncompletedList) })
                 }
-                items(inputState.unCompletedItems.size) { index ->
-                    UnCompletedTaskItem(inputState.unCompletedItems[index], index)
+                if (inputState.isUnCompletedListExpanded) {
+                    items(items = inputState.unCompletedItems, key = { it.id }) { item ->
+                        UnCompletedTaskItem(item)
+                    }
                 }
                 item {
                     CompletedListHead(inputState.completedItemsSize)
@@ -193,12 +206,18 @@ fun CompletedListHead(size: String) {
 }
 
 @Composable
-fun UncompletedListHead(size: String) {
+fun UncompletedListHead(size: String, isExpanded: Boolean, onClickExpand: () -> Unit) {
+    val rotation by animateFloatAsState(
+        targetValue = if (isExpanded) 180f else 0f
+    )
+
+
     HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(start = 4.dp, end = 4.dp)
+            .clickable(onClick = onClickExpand)
     ) {
         Icon(
             painter = painterResource(R.drawable.ic_circle_todos_list),
@@ -231,17 +250,19 @@ fun UncompletedListHead(size: String) {
                 .align(Alignment.CenterVertically)
                 .padding(end = 16.dp)
                 .size(36.dp)
+                .rotate(rotation)
         )
     }
 }
 
 @Composable
-fun UnCompletedTaskItem(item: TodoItem, index: Int) {
+fun LazyItemScope.UnCompletedTaskItem(item: TodoItem) {
     HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 8.dp, bottom = 8.dp),
+            .padding(top = 8.dp, bottom = 8.dp)
+            .animateItem(),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
