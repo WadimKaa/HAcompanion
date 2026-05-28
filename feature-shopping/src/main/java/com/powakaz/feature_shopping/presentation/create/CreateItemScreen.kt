@@ -329,15 +329,12 @@ fun CreateItemScreen(viewModel: CreateItemViewModel = hiltViewModel() ) {
                     OutlinedTextField(
                         value = uiState.text,
                         onValueChange = {
-                           // uiState.isTouched = true
-                           // uiState.text = it
-                            uiState.isTouched
+                            //uiState.isTouched
                             viewModel.onTextChanged(it)
 
                         },
 
                         trailingIcon = {
-                            //textEnteredCorrect || moreCharactersLimit
                             if (uiState.showCounter ) {
                                 Icon(
                                     painter = painterResource(id = R.drawable.close),
