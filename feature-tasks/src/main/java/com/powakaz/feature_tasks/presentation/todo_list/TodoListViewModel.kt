@@ -5,6 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.powakaz.core_network.model.NetworkResult
 import com.powakaz.feature_tasks.domain.model.TodoItem
 import com.powakaz.feature_tasks.domain.usecase.GetTodoItemsUseCase
+import com.powakaz.feature_tasks.domain.usecase.ObserveTodoItemsUseCase
+import com.powakaz.feature_tasks.domain.usecase.RefreshTodoItemsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -34,39 +36,64 @@ sealed interface TodoListUIEvent {
 }
 
 @HiltViewModel
-class TodoListViewModel @Inject constructor(private val todoItemsUseCase: GetTodoItemsUseCase) :
+class TodoListViewModel @Inject constructor(
+    private val observeTodoItemsUseCase: ObserveTodoItemsUseCase,
+    private val refreshTodoItemsUseCase: RefreshTodoItemsUseCase
+) :
     ViewModel() {
 
     private val _state = MutableStateFlow(TodoListState())
     val state = _state.asStateFlow()
 
+    private fun refreshData() {
+        viewModelScope.launch {
+            // Просто пинаем сеть. Результат прилетит в collect выше сам через базу.
+            refreshTodoItemsUseCase("todo.moi_dela")
+        }
+    }
 
     init {
         viewModelScope.launch {
-            when (val result = todoItemsUseCase("todo.moi_dela")) {
+            observeTodoItemsUseCase().collect { items ->
+                val (completed, uncompleted) =
+                    items.partition { it.isCompleted }
 
-                is NetworkResult.Success -> {
-
-                    val (completed, uncompleted) =
-                        result.data.partition { it.isCompleted }
-
-                    _state.update {
-                        it.copy(
-                            completedItems = completed,
-                            unCompletedItems = uncompleted
-                        )
-                    }
+                _state.update {
+                    it.copy(
+                        completedItems = completed,
+                        unCompletedItems = uncompleted
+                    )
                 }
 
-                is NetworkResult.Error -> {
-
-                }
-
-                is NetworkResult.Exception -> {
-
-                }
             }
         }
+
+        refreshData()
+//        viewModelScope.launch {
+//            when (val result = todoItemsUseCase("todo.moi_dela")) {
+//
+//                is NetworkResult.Success -> {
+//
+//                    val (completed, uncompleted) =
+//                        result.data.partition { it.isCompleted }
+//
+//                    _state.update {
+//                        it.copy(
+//                            completedItems = completed,
+//                            unCompletedItems = uncompleted
+//                        )
+//                    }
+//                }
+//
+//                is NetworkResult.Error -> {
+//
+//                }
+//
+//                is NetworkResult.Exception -> {
+//
+//                }
+//            }
+//        }
     }
 
 
