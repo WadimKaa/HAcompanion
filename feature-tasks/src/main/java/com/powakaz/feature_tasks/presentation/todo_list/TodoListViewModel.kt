@@ -23,7 +23,8 @@ import javax.inject.Inject
 data class TodoListState(
     val unCompletedItems: List<TodoItem> = emptyList(),
     val completedItems: List<TodoItem> = emptyList(),
-    val isUnCompletedListExpanded: Boolean = false
+    val isUnCompletedListExpanded: Boolean = false,
+    val isCompletedListExpanded: Boolean = false,
 ) {
     val unCompletedItemsSize: String = unCompletedItems.size.toString()
     val completedItemsSize: String = completedItems.size.toString()
@@ -32,6 +33,7 @@ data class TodoListState(
 sealed interface TodoListUIEvent {
 
     object ChangeExpandUncompletedList : TodoListUIEvent
+    object ChangeExpandCompletedList : TodoListUIEvent
 
 }
 
@@ -69,31 +71,6 @@ class TodoListViewModel @Inject constructor(
         }
 
         refreshData()
-//        viewModelScope.launch {
-//            when (val result = todoItemsUseCase("todo.moi_dela")) {
-//
-//                is NetworkResult.Success -> {
-//
-//                    val (completed, uncompleted) =
-//                        result.data.partition { it.isCompleted }
-//
-//                    _state.update {
-//                        it.copy(
-//                            completedItems = completed,
-//                            unCompletedItems = uncompleted
-//                        )
-//                    }
-//                }
-//
-//                is NetworkResult.Error -> {
-//
-//                }
-//
-//                is NetworkResult.Exception -> {
-//
-//                }
-//            }
-//        }
     }
 
 
@@ -102,6 +79,12 @@ class TodoListViewModel @Inject constructor(
             is TodoListUIEvent.ChangeExpandUncompletedList -> {
                 _state.update {
                     it.copy(isUnCompletedListExpanded = !it.isUnCompletedListExpanded)
+                }
+            }
+
+            TodoListUIEvent.ChangeExpandCompletedList -> {
+                _state.update {
+                    it.copy(isCompletedListExpanded = !it.isCompletedListExpanded)
                 }
             }
         }

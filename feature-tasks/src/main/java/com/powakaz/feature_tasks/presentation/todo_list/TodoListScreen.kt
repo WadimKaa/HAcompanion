@@ -3,7 +3,6 @@ package com.powakaz.feature_tasks.presentation.todo_list
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -25,10 +24,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
@@ -114,11 +111,18 @@ fun TodoListContent(
                     }
                 }
                 item {
-                    CompletedListHead(inputState.completedItemsSize)
+                    CompletedListHead(
+                        inputState.completedItemsSize,
+                        inputState.isCompletedListExpanded,
+                        onExpandClick = {
+                            onEvent(TodoListUIEvent.ChangeExpandCompletedList)
+                        }
+                    )
                 }
-                items(count = inputState.completedItems.size) { index ->
-                    CompletedTaskItem(inputState.completedItems[index], index)
-                }
+                if (inputState.isCompletedListExpanded)
+                    items(items = inputState.completedItems, key = { it.id }) { item ->
+                        CompletedTaskItem(item)
+                    }
             }
 
         }
@@ -127,7 +131,7 @@ fun TodoListContent(
 }
 
 @Composable
-fun CompletedTaskItem(item: TodoItem, index: Int) {
+fun CompletedTaskItem(item: TodoItem) {
     HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
     Row(
         modifier = Modifier
@@ -163,12 +167,18 @@ fun CompletedTaskItem(item: TodoItem, index: Int) {
 }
 
 @Composable
-fun CompletedListHead(size: String) {
+fun CompletedListHead(size: String, completedListExpanded: Boolean, onExpandClick: () -> Unit) {
+    val rotation by animateFloatAsState(
+        targetValue = if (completedListExpanded) 180f else 0f
+    )
+
+
     HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(start = 4.dp, end = 4.dp)
+            .clickable(onClick = { onExpandClick() })
     ) {
         Icon(
             painter = painterResource(R.drawable.ic_tasks_completed_task),
@@ -201,6 +211,7 @@ fun CompletedListHead(size: String) {
                 .align(Alignment.CenterVertically)
                 .padding(end = 16.dp)
                 .size(36.dp)
+                .rotate(rotation)
         )
     }
 }
