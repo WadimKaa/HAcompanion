@@ -64,10 +64,12 @@ import com.powakaz.feature_shopping.presentation.input.InputStateTextField
 @OptIn(ExperimentalMaterial3Api::class)
 //@Preview(showBackground = true)
 @Composable
-fun CreateItemScreen(viewModel: CreateItemViewModel = hiltViewModel() ) {
+fun CreateItemScreen(
+    viewModel: CreateItemViewModel = hiltViewModel(),
+    onNavigateToList: () -> Unit
+) {
 
     val uiState by viewModel.uiState.collectAsState()
-    val context = LocalContext.current
 
 
     val fillColor = when (uiState.inputState) {
@@ -221,11 +223,10 @@ fun CreateItemScreen(viewModel: CreateItemViewModel = hiltViewModel() ) {
 
                 Button(
                     onClick = {
-                        Toast
-                            .makeText(context, "Готово", Toast.LENGTH_SHORT)
-                            .show()
+                        onNavigateToList()
                     },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
                         .height(60.dp)
                         .padding(start = 24.dp, end = 24.dp),
                     shape = RoundedCornerShape(12.dp),
@@ -335,7 +336,7 @@ fun CreateItemScreen(viewModel: CreateItemViewModel = hiltViewModel() ) {
                         },
 
                         trailingIcon = {
-                            if (uiState.showCounter ) {
+                            if (uiState.showCounter) {
                                 Icon(
                                     painter = painterResource(id = R.drawable.close),
                                     contentDescription = "Очистить",
@@ -466,9 +467,6 @@ fun CreateItemScreen(viewModel: CreateItemViewModel = hiltViewModel() ) {
                 Button(
                     onClick = {
                         viewModel.onSaveClick()
-                        Toast
-                            .makeText(context, "Сохранено", Toast.LENGTH_SHORT)
-                            .show()
                     },
                     enabled = uiState.canSave,
                     shape = RoundedCornerShape(12.dp),

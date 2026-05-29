@@ -6,7 +6,11 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.powakaz.feature_shopping.presentation.create.CreateItemScreen
+import com.powakaz.feature_shopping.presentation.list.ShoppingListScreen
 import com.powakaz.hacompanion.ui.theme.HAcompanionTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -14,37 +18,32 @@ import dagger.hilt.android.AndroidEntryPoint
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
-    //private val shoppingViewModel: ShoppingViewModel by viewModels()
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
 
         setContent {
             HAcompanionTheme {
-                Surface(color = MaterialTheme.colorScheme.background) {
+                val navController = rememberNavController()
 
-                    //ShoppingScreen(viewModel = shoppingViewModel)
-                    CreateItemScreen()
+                NavHost(navController = navController, startDestination = "shopping_list") {
+                    composable("shopping_list") {
+                        ShoppingListScreen(
+                            onNavigateToCreate = { navController.navigate("create_item") }
+                        )
+
+                    }
+
+                    composable("create_item") {
+                        CreateItemScreen(
+                            onNavigateToList = {
+                                navController.navigate("shopping_list") {
+                                    popUpTo("create_item") { inclusive = true }
+                                }
+                            }
+                        )
+                    }
                 }
             }
         }
     }
 }
-
-
-/*@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    HAcompanionTheme {
-        Greeting("Android")
-    }
-}*/
