@@ -107,7 +107,7 @@ fun TodoListContent(
                 }
                 if (inputState.isUnCompletedListExpanded) {
                     items(items = inputState.unCompletedItems, key = { it.id }) { item ->
-                        UnCompletedTaskItem(item)
+                        UnCompletedTaskItem(item, modifier = Modifier.animateItem())
                     }
                 }
                 item {
@@ -116,12 +116,13 @@ fun TodoListContent(
                         inputState.isCompletedListExpanded,
                         onExpandClick = {
                             onEvent(TodoListUIEvent.ChangeExpandCompletedList)
-                        }
+                        },
+                        modifier = Modifier.animateItem()
                     )
                 }
                 if (inputState.isCompletedListExpanded)
                     items(items = inputState.completedItems, key = { it.id }) { item ->
-                        CompletedTaskItem(item)
+                        CompletedTaskItem(item, modifier = Modifier.animateItem())
                     }
             }
 
@@ -131,10 +132,10 @@ fun TodoListContent(
 }
 
 @Composable
-fun CompletedTaskItem(item: TodoItem) {
-    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+fun CompletedTaskItem(item: TodoItem, modifier: Modifier = Modifier) {
+    HorizontalDivider(modifier = modifier.padding(horizontal = 16.dp))
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(top = 8.dp, bottom = 8.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -167,15 +168,20 @@ fun CompletedTaskItem(item: TodoItem) {
 }
 
 @Composable
-fun CompletedListHead(size: String, completedListExpanded: Boolean, onExpandClick: () -> Unit) {
+fun CompletedListHead(
+    size: String,
+    completedListExpanded: Boolean,
+    onExpandClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     val rotation by animateFloatAsState(
         targetValue = if (completedListExpanded) 180f else 0f
     )
 
 
-    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+    HorizontalDivider(modifier = modifier.padding(horizontal = 16.dp))
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(start = 4.dp, end = 4.dp)
             .clickable(onClick = { onExpandClick() })
@@ -267,13 +273,12 @@ fun UncompletedListHead(size: String, isExpanded: Boolean, onClickExpand: () -> 
 }
 
 @Composable
-fun LazyItemScope.UnCompletedTaskItem(item: TodoItem) {
-    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+fun UnCompletedTaskItem(item: TodoItem, modifier: Modifier = Modifier) {
+    HorizontalDivider(modifier = modifier.padding(horizontal = 16.dp))
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
-            .padding(top = 8.dp, bottom = 8.dp)
-            .animateItem(),
+            .padding(top = 8.dp, bottom = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
