@@ -6,4 +6,5 @@ import com.powakaz.feature_shopping.domain.model.ShoppingItem
 interface ShoppingRepository {
     suspend fun getShoppingList(): NetworkResult<List<ShoppingItem>>
     suspend fun addShoppingItem(name: String): NetworkResult<Unit>
+    suspend fun updateShoppingItem(itemId: String, isCompleted: Boolean) : NetworkResult<Unit>
 }

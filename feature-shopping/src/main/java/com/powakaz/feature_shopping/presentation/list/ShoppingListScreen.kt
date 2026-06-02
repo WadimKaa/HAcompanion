@@ -1,11 +1,13 @@
 package com.powakaz.feature_shopping.presentation.list
 
+import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -22,14 +24,17 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
@@ -49,20 +54,33 @@ fun ShoppingListScreen(
     viewModel: ShoppingListViewModel = hiltViewModel(),
     onNavigateToCreate: () -> Unit
 ) {
-
+    val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
 
+
     ShoppingListContent(
-        ui_State = uiState,
-        onNavigateToCreate = onNavigateToCreate
+        boughtItems = uiState.boughtItems,
+        notBoughtItems = uiState.notBoughtItems,
+        onNavigateToCreate = onNavigateToCreate,
+        onToggleItem = { itemId ->
+            viewModel.toggleItem(itemId)
+        }
     )
+
+    LaunchedEffect(uiState.errorResId) {
+        uiState.errorResId?.let { errorMessage ->
+            Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
+        }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ShoppingListContent(
-    ui_State: ShoppingListUiState,
-    onNavigateToCreate: () -> Unit
+    boughtItems: List<ShoppingItem>,
+    notBoughtItems: List<ShoppingItem>,
+    onNavigateToCreate: () -> Unit,
+    onToggleItem: (String) -> Unit
 ) {
 
     Scaffold(
@@ -97,21 +115,30 @@ fun ShoppingListContent(
                 },
 
                 actions = {
-                    IconButton(
+                    TextButton(
                         onClick = {
                             //удалить весь список
                         },
                         modifier = Modifier
-                            .size(30.dp)
-                            .offset(x = (-10).dp)
+                            .size(130.dp)
+                            .offset(x = (-4).dp)
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.delete_svg),
-                            contentDescription = "Очистить",
+                            contentDescription = "Очистить всё",
                             tint = Color.Unspecified,
-                            modifier = Modifier.size(34.dp)
+                            modifier = Modifier.size(24.dp)
                         )
 
+                        Spacer(modifier = Modifier.width(2.dp))
+
+                        Text(
+                            text = stringResource(id = R.string.delete_all),
+                            color = Color.DarkGray,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.SemiBold
+
+                        )
                     }
                 }
             )
@@ -148,26 +175,55 @@ fun ShoppingListContent(
                 thickness = 1.dp
             )
 
-            Text(
-                modifier = Modifier.padding(16.dp, 10.dp),
-                text = stringResource(id = R.string.need_to_buy),
-                color = Color.Black,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.SemiBold,
-                fontFamily = FontFamily.Default
-            )
-
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(bottom = 80.dp)
             )
             {
-                items(ui_State.items) { item ->
 
+                if (notBoughtItems.isNotEmpty()) {
+                    item {
+                        Text(
+                            modifier = Modifier.padding(16.dp, 10.dp),
+                            text = stringResource(id = R.string.need_to_buy),
+                            color = Color.Black,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            fontFamily = FontFamily.Default
+                        )
+                    }
+                }
+
+                items(notBoughtItems) { item ->
                     ShoppingItemRow(
                         item = item,
                         onDeleteClick = {},
-                        onCheckedChange = {}
+                        onCheckedChange = {
+                            onToggleItem(item.id)
+                        }
+                    )
+                }
+
+                if (boughtItems.isNotEmpty()) {
+                    item {
+                        Text(
+                            modifier = Modifier.padding(16.dp, 10.dp),
+                            text = stringResource(id = R.string.buy),
+                            color = Color.Black,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            fontFamily = FontFamily.Default
+                        )
+                    }
+                }
+
+                items(boughtItems) { item ->
+                    ShoppingItemRow(
+                        item = item,
+                        onDeleteClick = {},
+                        onCheckedChange = {
+                            onToggleItem(item.id)
+                        }
                     )
 
                 }
@@ -181,15 +237,21 @@ fun ShoppingListContent(
 @Composable
 fun ShoppingListScreenPreview() {
     ShoppingListContent(
-        ui_State = ShoppingListUiState(
-            items = listOf(
-                ShoppingItem("1", "Молоко 1.5%", false),
-                ShoppingItem("2", "Хлеб ржаной", true),
-                ShoppingItem("3", "Молоко 1.5%", false),
-                ShoppingItem("4", "Хлеб ржаной", true),
+        boughtItems = listOf(
 
-            )
+            ShoppingItem("1", "Молоко 1.5%", false),
+            ShoppingItem("2", "Хлеб ржаной", false),
+            ShoppingItem("3", "Молоко 1.5%", false),
+            ShoppingItem("4", "Хлеб ржаной", false)
+
         ),
-        onNavigateToCreate = {}
+        notBoughtItems = listOf(
+            ShoppingItem("1", "Молоко 1.5%", false),
+            ShoppingItem("2", "Хлеб ржаной", true),
+            ShoppingItem("3", "Молоко 1.5%", false),
+            ShoppingItem("4", "Хлеб ржаной", true)
+        ),
+        onNavigateToCreate = {},
+        onToggleItem = {}
     )
 }

@@ -6,6 +6,7 @@ import com.powakaz.feature_shopping.data.api.ShoppingApi
 import com.powakaz.feature_shopping.data.mapper.toDomain
 import com.powakaz.feature_shopping.data.model.AddShoppingItemRequest
 import com.powakaz.feature_shopping.data.model.TodoRequest
+import com.powakaz.feature_shopping.data.model.UpdateItemRequest
 import com.powakaz.feature_shopping.domain.model.ShoppingItem
 import com.powakaz.feature_shopping.domain.repository.ShoppingRepository
 
@@ -40,5 +41,23 @@ class ShoppingRepositoryImpl( private val api: ShoppingApi) : ShoppingRepository
                 )
             )
         }
+    }
+
+    override suspend fun updateShoppingItem(
+        itemId: String,
+        isCompleted: Boolean
+    ): NetworkResult<Unit> {
+        val status = if (isCompleted) "completed" else "needs_action"
+
+        return safeApiCall {
+            api.updateShoppingItem(
+                UpdateItemRequest(
+                    entityId = entityId,
+                    item = itemId,
+                    status = status
+                )
+            )
+        }
+
     }
 }
