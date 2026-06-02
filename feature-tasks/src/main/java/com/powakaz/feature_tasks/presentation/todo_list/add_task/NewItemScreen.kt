@@ -14,10 +14,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -77,7 +79,7 @@ fun TaskContentPreview() {
     // Создаем фейковое состояние для отображения в превью
     val fakeState = TaskUiState(
         taskName = "Купить мо",
-        isSuccessSaved = true
+        isSuccessSaved = false
     )
 
     TaskContent(
@@ -108,6 +110,7 @@ fun TaskContent(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
+                .imePadding()
         ) {
             if (!inputState.isSuccessSaved) {
                 Column(
@@ -498,7 +501,7 @@ fun TopBar(title: String, onClickBackButton: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .safeDrawingPadding()
+            .statusBarsPadding()
             .padding(start = 16.dp, end = 16.dp, top = 24.dp)
 
     ) {

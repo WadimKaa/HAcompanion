@@ -9,6 +9,7 @@ interface TodoRepository {
     suspend fun getTodoItems(listName: String): NetworkResult<List<TodoItem>>
     suspend fun addTodoItem(entityName: String, listName: String): NetworkResult<Response>
     suspend fun deleteTodoItem(entityId: String): NetworkResult<Response>
+    suspend fun changeStateTodoItem(entityId: String, isCompleted : Boolean): NetworkResult<Response>
 
 
     fun observeTodoItems(): Flow<List<TodoItem>>

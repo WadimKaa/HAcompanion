@@ -1,6 +1,7 @@
 package com.powakaz.feature_tasks.presentation.todo_list
 
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -73,7 +74,8 @@ fun TodoListContentPreview(
             completedItems = listOf(
                 TodoItem("", "ne_hui", true),
                 TodoItem("", "i_ne_pizda", true)
-            )
+            ),
+            isCompletedListExpanded = true
         ),
         onEvent = {},
         onAction = {}
@@ -107,7 +109,11 @@ fun TodoListContent(
                 }
                 if (inputState.isUnCompletedListExpanded) {
                     items(items = inputState.unCompletedItems, key = { it.id }) { item ->
-                        UnCompletedTaskItem(item, modifier = Modifier.animateItem())
+                        UnCompletedTaskItem(item, modifier = Modifier.animateItem(
+                            fadeInSpec = tween(300),
+                            fadeOutSpec = tween (300),
+                            placementSpec = tween(300)
+                        ))
                     }
                 }
                 item {

@@ -8,6 +8,7 @@ import com.powakaz.feature_tasks.data.mapper.toDomain
 import com.powakaz.feature_tasks.data.mapper.toEntity
 import com.powakaz.feature_tasks.data.remote.NetworkTodoListApi
 import com.powakaz.feature_tasks.data.remote.model.add_item.AddItemBody
+import com.powakaz.feature_tasks.data.remote.model.change_status_item.ChangeStatusItemTodoBody
 import com.powakaz.feature_tasks.data.remote.model.delete_item.DeleteTodoItemRequestBody
 import com.powakaz.feature_tasks.data.remote.model.get_items.GetItemsBody
 import com.powakaz.feature_tasks.domain.model.Response
@@ -36,7 +37,7 @@ class TodoRepositoryImpl @Inject constructor(
             todoDao.insertItems(entities)
 
             Result.success(Unit)
-        }catch (e : Exception){
+        } catch (e: Exception) {
             Result.failure(e)
         }
     }
@@ -66,14 +67,30 @@ class TodoRepositoryImpl @Inject constructor(
 
     override suspend fun deleteTodoItem(entityId: String): NetworkResult<Response> {
         return safeApiCall {
-            val response = api.deleteTodoItem(
+            api.deleteTodoItem(
                 DeleteTodoItemRequestBody(
                     itemId = entityId,
                     listId = "todo.moi_dela"
                 )
             ).toDomain()
 
-            response
+        }
+    }
+
+    override suspend fun changeStateTodoItem(
+        entityId: String,
+        isCompleted: Boolean
+    ): NetworkResult<Response> {
+        val status = if (isCompleted) "completed" else "needs_action"
+
+        return safeApiCall {
+            api.changeStatusTodoItem(
+                changeStatusItemTodoBody = ChangeStatusItemTodoBody(
+                    listId = "todo.moi_dela",
+                    itemId = entityId,
+                    status = status
+                )
+            ).toDomain()
         }
     }
 }
