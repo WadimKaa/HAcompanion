@@ -21,16 +21,20 @@ import javax.inject.Inject
 
 
 data class TodoListState(
-    val unCompletedItems: List<TodoItem> = emptyList(),
-    val completedItems: List<TodoItem> = emptyList(),
+    val mainList: List<TodoItem> = emptyList(),
     val isUnCompletedListExpanded: Boolean = false,
     val isCompletedListExpanded: Boolean = false,
 ) {
+
+    val unCompletedItems: List<TodoItem> = mainList.filter { !it.isCompleted }
+    val completedItems: List<TodoItem> = mainList.filter { it.isCompleted }
+
     val unCompletedItemsSize: String = unCompletedItems.size.toString()
     val completedItemsSize: String = completedItems.size.toString()
 }
 
 sealed interface TodoListUIEvent {
+    data class ChangeItemStatus(val id: String) : TodoListUIEvent
 
     object ChangeExpandUncompletedList : TodoListUIEvent
     object ChangeExpandCompletedList : TodoListUIEvent
@@ -57,13 +61,10 @@ class TodoListViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             observeTodoItemsUseCase().collect { items ->
-                val (completed, uncompleted) =
-                    items.partition { it.isCompleted }
 
                 _state.update {
                     it.copy(
-                        completedItems = completed,
-                        unCompletedItems = uncompleted
+                        mainList = items
                     )
                 }
 
@@ -85,6 +86,12 @@ class TodoListViewModel @Inject constructor(
             TodoListUIEvent.ChangeExpandCompletedList -> {
                 _state.update {
                     it.copy(isCompletedListExpanded = !it.isCompletedListExpanded)
+                }
+            }
+
+            is TodoListUIEvent.ChangeItemStatus -> {
+                _state.update {
+                    it.copy()
                 }
             }
         }

@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Update
 import com.powakaz.feature_tasks.data.local.TodoItemEntity
 import kotlinx.coroutines.flow.Flow
 
@@ -17,6 +18,9 @@ interface TodoDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertItems(items: List<TodoItemEntity>)
+
+    @Update
+    suspend fun updateItem(item : TodoItemEntity)
 
 
     @Query("DELETE FROM todo_items WHERE id = :id")

@@ -13,7 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyItemScope
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
@@ -38,7 +38,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.powakaz.feature_tasks.R
 import com.powakaz.feature_tasks.domain.model.TodoItem
-import androidx.compose.foundation.lazy.items
 
 
 sealed interface TodoListScreenAction {
@@ -67,13 +66,11 @@ fun TodoListContentPreview(
 ) {
     TodoListContent(
         inputState = TodoListState(
-            unCompletedItems = listOf(
-                TodoItem("", "hui", false),
-                TodoItem("", "pizda", false)
-            ),
-            completedItems = listOf(
-                TodoItem("", "ne_hui", true),
-                TodoItem("", "i_ne_pizda", true)
+            mainList = listOf(
+                TodoItem("1", "hui", false),
+                TodoItem("2", "pizda", false),
+                TodoItem("3", "ne_hui", true),
+                TodoItem("4", "i_ne_pizda", true)
             ),
             isCompletedListExpanded = true
         ),
@@ -113,7 +110,7 @@ fun TodoListContent(
                             fadeInSpec = tween(300),
                             fadeOutSpec = tween (300),
                             placementSpec = tween(300)
-                        ))
+                        ), onEvent)
                     }
                 }
                 item {
@@ -279,7 +276,11 @@ fun UncompletedListHead(size: String, isExpanded: Boolean, onClickExpand: () -> 
 }
 
 @Composable
-fun UnCompletedTaskItem(item: TodoItem, modifier: Modifier = Modifier) {
+fun UnCompletedTaskItem(
+    item: TodoItem,
+    modifier: Modifier = Modifier,
+    onEvent: (TodoListUIEvent) -> Unit
+) {
     HorizontalDivider(modifier = modifier.padding(horizontal = 16.dp))
     Row(
         modifier = modifier
@@ -294,6 +295,7 @@ fun UnCompletedTaskItem(item: TodoItem, modifier: Modifier = Modifier) {
             modifier = Modifier
                 .padding(start = 16.dp)
                 .size(36.dp)
+                .clickable(onClick = {onEvent(TodoListUIEvent.ChangeItemStatus(item.id))})
         )
         Text(
             text = item.title,
