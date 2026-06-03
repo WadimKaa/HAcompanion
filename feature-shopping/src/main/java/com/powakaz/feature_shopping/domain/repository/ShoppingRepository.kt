@@ -7,4 +7,5 @@ interface ShoppingRepository {
     suspend fun getShoppingList(): NetworkResult<List<ShoppingItem>>
     suspend fun addShoppingItem(name: String): NetworkResult<Unit>
     suspend fun updateShoppingItem(itemId: String, isCompleted: Boolean) : NetworkResult<Unit>
+    suspend fun deleteShoppingItem(itemId: String) : NetworkResult<Unit>
 }

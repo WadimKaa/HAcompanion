@@ -27,6 +27,7 @@ import com.powakaz.feature_shopping.domain.model.ShoppingItem
 
 @Composable
 fun ShoppingItemRow(
+    key: String,
     item: ShoppingItem,
     onDeleteClick: () -> Unit,
     onCheckedChange: (Boolean) -> Unit
@@ -84,6 +85,7 @@ fun ShoppingItemRow(
 fun ShoppingItemRowPreview() {
     ShoppingItemRow(
         item = ShoppingItem(id = "1", name = "Молоко 1.5%", isCompleted = false),
+        key = "",
         onDeleteClick = {},
         onCheckedChange = {}
     )
@@ -94,6 +96,7 @@ fun ShoppingItemRowPreview() {
 fun ShoppingItemRowCompletedPreview() {
     ShoppingItemRow(
         item = ShoppingItem(id = "2", name = "Сыр", isCompleted = true),
+        key = "",
         onDeleteClick = {},
         onCheckedChange = {}
     )

@@ -1,6 +1,7 @@
 package com.powakaz.feature_shopping.data.api
 
 import com.powakaz.feature_shopping.data.model.AddShoppingItemRequest
+import com.powakaz.feature_shopping.data.model.DeleteItemRequest
 import com.powakaz.feature_shopping.data.model.ServiceResponseDto
 import com.powakaz.feature_shopping.data.model.ShoppingItemDto
 import com.powakaz.feature_shopping.data.model.ShoppingItemsResponseDto
@@ -25,5 +26,10 @@ interface ShoppingApi {
     @POST("api/services/todo/update_item")
     suspend fun updateShoppingItem(
         @Body request: UpdateItemRequest
+    )
+
+    @POST("api/services/todo/remove_item")
+    suspend fun deleteShoppingItem(
+        @Body request: DeleteItemRequest
     )
 }

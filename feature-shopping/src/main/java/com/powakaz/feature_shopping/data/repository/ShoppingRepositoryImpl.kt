@@ -5,15 +5,16 @@ import com.powakaz.core_network.utils.safeApiCall
 import com.powakaz.feature_shopping.data.api.ShoppingApi
 import com.powakaz.feature_shopping.data.mapper.toDomain
 import com.powakaz.feature_shopping.data.model.AddShoppingItemRequest
+import com.powakaz.feature_shopping.data.model.DeleteItemRequest
 import com.powakaz.feature_shopping.data.model.TodoRequest
 import com.powakaz.feature_shopping.data.model.UpdateItemRequest
 import com.powakaz.feature_shopping.domain.model.ShoppingItem
 import com.powakaz.feature_shopping.domain.repository.ShoppingRepository
 
 
-class ShoppingRepositoryImpl( private val api: ShoppingApi) : ShoppingRepository {
+class ShoppingRepositoryImpl(private val api: ShoppingApi) : ShoppingRepository {
 
-    private val entityId  = "todo.shopping_list"
+    private val entityId = "todo.shopping_list"
 
     override suspend fun getShoppingList(): NetworkResult<List<ShoppingItem>> {
 
@@ -26,6 +27,7 @@ class ShoppingRepositoryImpl( private val api: ShoppingApi) : ShoppingRepository
                 val itemsDto = result.data.serviceResponse.todoShoppingList.items
                 NetworkResult.Success(itemsDto.map { it.toDomain() })
             }
+
             is NetworkResult.Error -> NetworkResult.Error(result.code, result.message)
             is NetworkResult.Exception -> NetworkResult.Exception(result.e)
         }
@@ -59,5 +61,16 @@ class ShoppingRepositoryImpl( private val api: ShoppingApi) : ShoppingRepository
             )
         }
 
+    }
+
+    override suspend fun deleteShoppingItem(itemId: String): NetworkResult<Unit> {
+        return safeApiCall {
+            api.deleteShoppingItem(
+                DeleteItemRequest(
+                    entityId = entityId, // "todo.shopping_list"
+                    item = itemId
+                )
+            )
+        }
     }
 }

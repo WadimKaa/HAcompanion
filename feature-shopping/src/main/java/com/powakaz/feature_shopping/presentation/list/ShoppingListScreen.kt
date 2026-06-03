@@ -64,6 +64,9 @@ fun ShoppingListScreen(
         onNavigateToCreate = onNavigateToCreate,
         onToggleItem = { itemId ->
             viewModel.toggleItem(itemId)
+        },
+        onDeleteItem = { itemId ->
+            viewModel.deleteItem(itemId)
         }
     )
 
@@ -80,7 +83,9 @@ fun ShoppingListContent(
     boughtItems: List<ShoppingItem>,
     notBoughtItems: List<ShoppingItem>,
     onNavigateToCreate: () -> Unit,
-    onToggleItem: (String) -> Unit
+    onToggleItem: (String) -> Unit,
+    onDeleteItem: (String) -> Unit
+
 ) {
 
     Scaffold(
@@ -197,7 +202,10 @@ fun ShoppingListContent(
                 items(notBoughtItems) { item ->
                     ShoppingItemRow(
                         item = item,
-                        onDeleteClick = {},
+                        key = item.id,
+                        onDeleteClick = {
+                            onDeleteItem(item.id)
+                        },
                         onCheckedChange = {
                             onToggleItem(item.id)
                         }
@@ -220,7 +228,10 @@ fun ShoppingListContent(
                 items(boughtItems) { item ->
                     ShoppingItemRow(
                         item = item,
-                        onDeleteClick = {},
+                        key = item.id,
+                        onDeleteClick = {
+                            onDeleteItem(item.id)
+                        },
                         onCheckedChange = {
                             onToggleItem(item.id)
                         }
@@ -252,6 +263,7 @@ fun ShoppingListScreenPreview() {
             ShoppingItem("4", "Хлеб ржаной", true)
         ),
         onNavigateToCreate = {},
-        onToggleItem = {}
+        onToggleItem = {},
+        onDeleteItem = {}
     )
 }

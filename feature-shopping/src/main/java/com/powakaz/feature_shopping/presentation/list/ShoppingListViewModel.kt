@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.powakaz.core_network.model.NetworkResult
 import com.powakaz.feature_shopping.R
 import com.powakaz.feature_shopping.domain.model.ShoppingItem
+import com.powakaz.feature_shopping.domain.usecase.DeleteShoppingItemUseCase
 import com.powakaz.feature_shopping.domain.usecase.GetShoppingItemsUseCase
 import com.powakaz.feature_shopping.domain.usecase.UpdateShoppingItemUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -22,7 +23,8 @@ import javax.inject.Inject
 @HiltViewModel
 class ShoppingListViewModel @Inject constructor(
     private val getShoppingItemsUseCase: GetShoppingItemsUseCase,
-    private val updateShoppingItemsUseCase: UpdateShoppingItemUseCase
+    private val updateShoppingItemsUseCase: UpdateShoppingItemUseCase,
+    private val deleteShoppingItemsUseCase: DeleteShoppingItemUseCase
 
 ) : ViewModel() {
 
@@ -98,6 +100,24 @@ class ShoppingListViewModel @Inject constructor(
                 }
             }
             currentState.copy(items = updatedItems)
+        }
+    }
+
+    fun deleteItem(itemId: String){
+        val oldShoppingList = _uiState.value.items
+
+        _uiState.update { state ->
+            state.copy(items = state.items.filter { it.id != itemId })
+        }
+
+        viewModelScope.launch {
+            val result = deleteShoppingItemsUseCase(itemId)
+
+            if (result !is NetworkResult.Success) {
+                _uiState.update {
+                    it.copy(items = oldShoppingList, errorResId = R.string.error_update_item)
+                }
+            }
         }
     }
 
