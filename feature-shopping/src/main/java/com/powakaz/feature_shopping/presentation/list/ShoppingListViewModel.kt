@@ -37,28 +37,40 @@ class ShoppingListViewModel @Inject constructor(
     }
 
 
-    fun loadItems() {
+    fun loadItems(isPullToRefresh: Boolean = false) {
         viewModelScope.launch {
-            _uiState.update {
-                it.copy(isLoading = true)
+
+            if(isPullToRefresh) {
+                _uiState.update { it.copy(isRefreshing = true) }
+
+            } else {
+                if (_uiState.value.items.isEmpty()){
+                    _uiState.update {
+                        it.copy(isLoading = true)
+                    }
+                }
             }
 
-            when (val result = getShoppingItemsUseCase()) {
+            val result = getShoppingItemsUseCase()
+            delay(500)
+
+            when (result) {
                 is NetworkResult.Success -> {
                     _uiState.update {
                         it.copy(
                             items = result.data,
-                            isLoading = false
+                            isLoading = false,
+                            isRefreshing = false
                         )
                     }
                 }
 
                 is NetworkResult.Error -> {
-                    _uiState.update { it.copy(isLoading = false, error = result.message) }
+                    _uiState.update { it.copy(isLoading = false, isRefreshing = false, error = result.message) }
                 }
 
                 is NetworkResult.Exception -> {
-                    _uiState.update { it.copy(isLoading = false, error = result.e.message) }
+                    _uiState.update { it.copy(isLoading = false, isRefreshing = false, error = result.e.message) }
                 }
 
             }
@@ -125,7 +137,8 @@ class ShoppingListViewModel @Inject constructor(
         val items: List<ShoppingItem> = emptyList(),
         val isLoading: Boolean = false,
         val error: String? = null,
-        val errorResId: Int? = null
+        val errorResId: Int? = null,
+        val isRefreshing: Boolean = false
     ) {
         val boughtItems: List<ShoppingItem>
             get() = items.filter { it.isCompleted }

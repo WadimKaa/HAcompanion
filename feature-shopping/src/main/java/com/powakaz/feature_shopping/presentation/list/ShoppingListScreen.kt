@@ -2,6 +2,7 @@ package com.powakaz.feature_shopping.presentation.list
 
 import android.widget.Toast
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -17,6 +18,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -26,14 +28,21 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshState
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -47,6 +56,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.powakaz.feature_shopping.R
 import com.powakaz.feature_shopping.domain.model.ShoppingItem
 import com.powakaz.feature_shopping.presentation.list.components.ShoppingItemRow
+import kotlinx.coroutines.delay
+import okhttp3.internal.http2.Http2Reader
 
 
 @Composable
@@ -67,6 +78,10 @@ fun ShoppingListScreen(
         },
         onDeleteItem = { itemId ->
             viewModel.deleteItem(itemId)
+        },
+        isRefreshing = uiState.isRefreshing,
+        onRefresh = {
+            viewModel.loadItems(isPullToRefresh = true)
         }
     )
 
@@ -84,9 +99,12 @@ fun ShoppingListContent(
     notBoughtItems: List<ShoppingItem>,
     onNavigateToCreate: () -> Unit,
     onToggleItem: (String) -> Unit,
-    onDeleteItem: (String) -> Unit
+    onDeleteItem: (String) -> Unit,
+    isRefreshing: Boolean,
+    onRefresh: () -> Unit
 
 ) {
+    val state = rememberPullToRefreshState()
 
     Scaffold(
         topBar = {
@@ -180,64 +198,126 @@ fun ShoppingListContent(
                 thickness = 1.dp
             )
 
-            LazyColumn(
+            PullToRefreshBox(
+                isRefreshing = isRefreshing,
+                onRefresh = onRefresh,
+                state = state,
+                indicator = {
+                    MyCustomIndicator(state = state, isRefreshing = isRefreshing)
+                },
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(bottom = 80.dp)
+                contentAlignment = Alignment.TopCenter
+            ) {
+
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(bottom = 10.dp)
+                )
+                {
+
+                    if (notBoughtItems.isNotEmpty()) {
+                        item {
+                            Text(
+                                modifier = Modifier.padding(16.dp, 10.dp),
+                                text = stringResource(id = R.string.need_to_buy),
+                                color = Color.Black,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                fontFamily = FontFamily.Default
+                            )
+                        }
+                    }
+
+                    items(notBoughtItems) { item ->
+                        ShoppingItemRow(
+                            item = item,
+                            key = item.id,
+                            onDeleteClick = {
+                                onDeleteItem(item.id)
+                            },
+                            onCheckedChange = {
+                                onToggleItem(item.id)
+                            }
+                        )
+                    }
+
+                    if (boughtItems.isNotEmpty()) {
+                        item {
+                            Text(
+                                modifier = Modifier.padding(16.dp, 10.dp),
+                                text = stringResource(id = R.string.buy),
+                                color = Color.Black,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                fontFamily = FontFamily.Default
+                            )
+                        }
+                    }
+
+                    items(boughtItems) { item ->
+                        ShoppingItemRow(
+                            item = item,
+                            key = item.id,
+                            onDeleteClick = {
+                                onDeleteItem(item.id)
+                            },
+                            onCheckedChange = {
+                                onToggleItem(item.id)
+                            }
+                        )
+
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+@Composable
+fun MyCustomIndicator(state: PullToRefreshState, isRefreshing: Boolean) {
+
+    var canShowIcon by remember { mutableStateOf(true) }
+
+    LaunchedEffect(isRefreshing) {
+        if (isRefreshing) {
+            canShowIcon = false
+        }
+    }
+
+    LaunchedEffect(state.distanceFraction) {
+        if (state.distanceFraction <= 0.01f && !isRefreshing) {
+            canShowIcon = true
+        }
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .graphicsLayer {
+                translationY = state.distanceFraction * 160f
+            },
+        contentAlignment = Alignment.TopCenter
+    ) {
+
+        if (isRefreshing) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(44.dp),
+                color = Color(0xFF4CAF50),
+                strokeWidth = 4.dp,
+                trackColor = Color.Green
             )
-            {
 
-                if (notBoughtItems.isNotEmpty()) {
-                    item {
-                        Text(
-                            modifier = Modifier.padding(16.dp, 10.dp),
-                            text = stringResource(id = R.string.need_to_buy),
-                            color = Color.Black,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            fontFamily = FontFamily.Default
-                        )
-                    }
-                }
-
-                items(notBoughtItems) { item ->
-                    ShoppingItemRow(
-                        item = item,
-                        key = item.id,
-                        onDeleteClick = {
-                            onDeleteItem(item.id)
-                        },
-                        onCheckedChange = {
-                            onToggleItem(item.id)
-                        }
-                    )
-                }
-
-                if (boughtItems.isNotEmpty()) {
-                    item {
-                        Text(
-                            modifier = Modifier.padding(16.dp, 10.dp),
-                            text = stringResource(id = R.string.buy),
-                            color = Color.Black,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            fontFamily = FontFamily.Default
-                        )
-                    }
-                }
-
-                items(boughtItems) { item ->
-                    ShoppingItemRow(
-                        item = item,
-                        key = item.id,
-                        onDeleteClick = {
-                            onDeleteItem(item.id)
-                        },
-                        onCheckedChange = {
-                            onToggleItem(item.id)
-                        }
-                    )
-
-                }
+        } else {
+            if (canShowIcon && state.distanceFraction > 0.01f) {
+                Icon(
+                    painter = painterResource(id = R.drawable.refresh_list),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(54.dp)
+                        .alpha(state.distanceFraction.coerceIn(0f, 1f)),
+                    tint = Color.Unspecified
+                )
             }
         }
     }
@@ -264,6 +344,9 @@ fun ShoppingListScreenPreview() {
         ),
         onNavigateToCreate = {},
         onToggleItem = {},
-        onDeleteItem = {}
+        onDeleteItem = {},
+        onRefresh = {},
+        isRefreshing = false
     )
 }
+
