@@ -1,4 +1,4 @@
-package com.powakaz.feature_tasks.presentation.todo_list
+package com.powakaz.feature_tasks.presentation.todo_list.list
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -106,11 +106,13 @@ fun TodoListContent(
                 }
                 if (inputState.isUnCompletedListExpanded) {
                     items(items = inputState.unCompletedItems, key = { it.id }) { item ->
-                        UnCompletedTaskItem(item, modifier = Modifier.animateItem(
-                            fadeInSpec = tween(300),
-                            fadeOutSpec = tween (300),
-                            placementSpec = tween(300)
-                        ), onEvent)
+                        UnCompletedTaskItem(
+                            item, modifier = Modifier.animateItem(
+                                fadeInSpec = tween(300),
+                                fadeOutSpec = tween(300),
+                                placementSpec = tween(300)
+                            ), onEvent, onAction
+                        )
                     }
                 }
                 item {
@@ -279,7 +281,8 @@ fun UncompletedListHead(size: String, isExpanded: Boolean, onClickExpand: () -> 
 fun UnCompletedTaskItem(
     item: TodoItem,
     modifier: Modifier = Modifier,
-    onEvent: (TodoListUIEvent) -> Unit
+    onEvent: (TodoListUIEvent) -> Unit,
+    onAction: (TodoListScreenAction) -> Unit
 ) {
     HorizontalDivider(modifier = modifier.padding(horizontal = 16.dp))
     Row(
@@ -295,7 +298,7 @@ fun UnCompletedTaskItem(
             modifier = Modifier
                 .padding(start = 16.dp)
                 .size(36.dp)
-                .clickable(onClick = {onEvent(TodoListUIEvent.ChangeItemStatus(item.id))})
+                .clickable(onClick = { onEvent(TodoListUIEvent.ChangeItemStatus(item.id)) })
         )
         Text(
             text = item.title,
@@ -304,6 +307,7 @@ fun UnCompletedTaskItem(
             modifier = Modifier
                 .weight(1f)
                 .padding(start = 8.dp)
+                .clickable(onClick = { onAction(TodoListScreenAction.OnOpenTask("1")) })
         )
         Icon(
             imageVector = Icons.AutoMirrored.Default.KeyboardArrowRight,
@@ -312,6 +316,7 @@ fun UnCompletedTaskItem(
             modifier = Modifier
                 .padding(end = 16.dp)
                 .size(36.dp)
+                .clickable(onClick = { onAction(TodoListScreenAction.OnOpenTask("1")) })
         )
     }
 }

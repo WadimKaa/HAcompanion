@@ -1,20 +1,13 @@
-package com.powakaz.feature_tasks.presentation.todo_list
+package com.powakaz.feature_tasks.presentation.todo_list.list
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.powakaz.core_network.model.NetworkResult
 import com.powakaz.feature_tasks.domain.model.TodoItem
-import com.powakaz.feature_tasks.domain.usecase.GetTodoItemsUseCase
 import com.powakaz.feature_tasks.domain.usecase.ObserveTodoItemsUseCase
 import com.powakaz.feature_tasks.domain.usecase.RefreshTodoItemsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject

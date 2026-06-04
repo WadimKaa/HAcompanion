@@ -5,10 +5,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.core.view.WindowCompat
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
-import com.powakaz.feature_tasks.presentation.todo_list.TodoListScreen
 import com.powakaz.hacompanion.ui.theme.HAcompanionTheme
 import dagger.hilt.android.AndroidEntryPoint
 

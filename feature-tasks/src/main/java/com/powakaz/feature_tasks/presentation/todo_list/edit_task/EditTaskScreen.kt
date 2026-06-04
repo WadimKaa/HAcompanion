@@ -1,6 +1,6 @@
 package com.powakaz.feature_tasks.presentation.todo_list.edit_task
 
-import android.widget.ProgressBar
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Image
@@ -12,9 +12,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -35,6 +37,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -42,11 +45,22 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.powakaz.feature_tasks.R
 
-@Composable
-fun EditTaskScreen() {
 
+sealed interface EditTaskScreenAction {
+    object OnBack : EditTaskScreenAction
+}
+
+@Composable
+fun EditTaskScreen(
+    viewModel: EditTaskViewModel = hiltViewModel(),
+    screenAction: (EditTaskScreenAction) -> Unit
+) {
+    val inputState by viewModel.uiState.collectAsStateWithLifecycle()
+    EditTaskContent(inputState = inputState, onEvent = viewModel::onEvent, screenAction)
 }
 
 @Preview
@@ -58,21 +72,28 @@ fun EditTaskPreview() {
         wasFocusedOnce = true
     )
 
-    editTaskContent(inputState)
+    EditTaskContent(inputState, {}, {})
 }
 
 
 @Composable
-fun editTaskContent(inputState: EditTaskUIState) {
-    Scaffold(topBar = { TopBarCustom() }) { paddings ->
+fun EditTaskContent(
+    inputState: EditTaskUIState,
+    onEvent: (EditTaskUIEvent) -> Unit,
+    onAction: (EditTaskScreenAction) -> Unit
+) {
+    Scaffold(topBar = { TopBarCustom(onAction) }) { paddings ->
         Box(
             modifier = Modifier
                 .padding(paddings)
                 .fillMaxSize()
+                .imePadding()
         ) {
             Column(modifier = Modifier.align(Alignment.Center)) {
-                Head()
-                TextInput(inputState)
+                AnimatedVisibility(visible = !inputState.isNeedHideHead) {
+                    Head()
+                }
+                TextInput(inputState, onEvent)
                 if (inputState.isOutLengthError) {
                     OutLengthError(inputState.lengthTextLimit)
                 }
@@ -155,7 +176,7 @@ fun OutLengthError(lengthTextLimit: Int) {
 }
 
 @Composable
-fun TextInput(inputState: EditTaskUIState) {
+fun TextInput(inputState: EditTaskUIState, onEvent: (EditTaskUIEvent) -> Unit) {
     val focusedBorderColor =
         if (inputState.isOutLengthError) Color(0xFFf4c394) else Color(0XFFada3e4)
     val unFocusedBorderColor =
@@ -181,7 +202,7 @@ fun TextInput(inputState: EditTaskUIState) {
         OutlinedTextField(
             value = inputState.taskName,
             onValueChange = {
-
+                onEvent(EditTaskUIEvent.ChangeName(it))
             },
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = focusedBorderColor,
@@ -191,6 +212,9 @@ fun TextInput(inputState: EditTaskUIState) {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(start = 16.dp, end = 16.dp, top = 24.dp, bottom = 24.dp)
+                .onFocusChanged{
+                    onEvent(EditTaskUIEvent.FocusChange(it.isFocused))
+                }
 
         )
         Text(
@@ -211,7 +235,9 @@ fun TextInput(inputState: EditTaskUIState) {
                     )
                     .padding(top = 4.dp, end = 24.dp)
                     .scale(0.8f)
-                    .clickable(onClick = {}),
+                    .clickable(onClick = {
+                        onEvent(EditTaskUIEvent.ClearTextField)
+                    }),
                 tint = Color(0XFFadacb1)
             )
         }
@@ -252,10 +278,12 @@ fun Head() {
 }
 
 @Composable
-fun TopBarCustom() {
-    Box(modifier = Modifier.fillMaxWidth()) {
+fun TopBarCustom(onAction: (EditTaskScreenAction) -> Unit) {
+    Box(modifier = Modifier.fillMaxWidth().statusBarsPadding()) {
         IconButton(
-            onClick = {},
+            onClick = {
+                onAction(EditTaskScreenAction.OnBack)
+            },
             shape = RoundedCornerShape(12.dp),
             colors = IconButtonDefaults.iconButtonColors(
                 containerColor = Color(0xFFFFFFFF)
