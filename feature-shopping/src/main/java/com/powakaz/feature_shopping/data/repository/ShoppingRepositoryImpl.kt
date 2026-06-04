@@ -14,7 +14,7 @@ import com.powakaz.feature_shopping.domain.repository.ShoppingRepository
 
 class ShoppingRepositoryImpl(private val api: ShoppingApi) : ShoppingRepository {
 
-    private val entityId = "todo.shopping_list"
+    private val entityId = "todo.polina_list"
 
     override suspend fun getShoppingList(): NetworkResult<List<ShoppingItem>> {
 

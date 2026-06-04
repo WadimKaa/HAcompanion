@@ -5,6 +5,6 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class ServiceResponseDto(
-    @SerialName("todo.shopping_list")
+    @SerialName("todo.polina_list")
     val todoShoppingList : ToDoShoppingListDto
 )

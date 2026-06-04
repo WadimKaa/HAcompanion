@@ -40,21 +40,18 @@ class ShoppingListViewModel @Inject constructor(
     fun loadItems(isPullToRefresh: Boolean = false) {
         viewModelScope.launch {
 
-            if(isPullToRefresh) {
+            if (isPullToRefresh) {
                 _uiState.update { it.copy(isRefreshing = true) }
-
+                delay(500)
             } else {
-                if (_uiState.value.items.isEmpty()){
+                if (_uiState.value.items.isEmpty()) {
                     _uiState.update {
                         it.copy(isLoading = true)
                     }
                 }
             }
 
-            val result = getShoppingItemsUseCase()
-            delay(500)
-
-            when (result) {
+            when (val result = getShoppingItemsUseCase()) {
                 is NetworkResult.Success -> {
                     _uiState.update {
                         it.copy(
@@ -66,11 +63,23 @@ class ShoppingListViewModel @Inject constructor(
                 }
 
                 is NetworkResult.Error -> {
-                    _uiState.update { it.copy(isLoading = false, isRefreshing = false, error = result.message) }
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            isRefreshing = false,
+                            error = result.message
+                        )
+                    }
                 }
 
                 is NetworkResult.Exception -> {
-                    _uiState.update { it.copy(isLoading = false, isRefreshing = false, error = result.e.message) }
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            isRefreshing = false,
+                            error = result.e.message
+                        )
+                    }
                 }
 
             }
@@ -89,11 +98,10 @@ class ShoppingListViewModel @Inject constructor(
             if (result !is NetworkResult.Success) {
                 updateLocalStatus(itemId, !newStatus)
 
-                //сообщение об ошибке
                 _uiState.update {
                     it.copy(errorResId = R.string.error_update_item) //text message
                 }
-                //убираем сообщение
+
                 viewModelScope.launch {
                     delay(6000)
                     _uiState.update { it.copy(errorResId = null) }
@@ -115,7 +123,7 @@ class ShoppingListViewModel @Inject constructor(
         }
     }
 
-    fun deleteItem(itemId: String){
+    fun deleteItem(itemId: String) {
         val oldShoppingList = _uiState.value.items
 
         _uiState.update { state ->

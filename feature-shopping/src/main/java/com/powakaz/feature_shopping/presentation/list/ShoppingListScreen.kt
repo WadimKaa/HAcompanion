@@ -1,6 +1,7 @@
 package com.powakaz.feature_shopping.presentation.list
 
 import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,22 +26,28 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxState
+import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshState
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
@@ -104,7 +111,7 @@ fun ShoppingListContent(
     onRefresh: () -> Unit
 
 ) {
-    val state = rememberPullToRefreshState()
+    val pullToRefreshState = rememberPullToRefreshState()
 
     Scaffold(
         topBar = {
@@ -201,9 +208,9 @@ fun ShoppingListContent(
             PullToRefreshBox(
                 isRefreshing = isRefreshing,
                 onRefresh = onRefresh,
-                state = state,
+                state = pullToRefreshState,
                 indicator = {
-                    MyCustomIndicator(state = state, isRefreshing = isRefreshing)
+                    MyCustomIndicator(state = pullToRefreshState, isRefreshing = isRefreshing)
                 },
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.TopCenter
@@ -228,17 +235,19 @@ fun ShoppingListContent(
                         }
                     }
 
-                    items(notBoughtItems) { item ->
-                        ShoppingItemRow(
-                            item = item,
-                            key = item.id,
-                            onDeleteClick = {
-                                onDeleteItem(item.id)
-                            },
-                            onCheckedChange = {
-                                onToggleItem(item.id)
-                            }
-                        )
+                    items(notBoughtItems, key = { it.id }) { item ->
+                        SwipeToDeleteItemContainer(item = item, onDelete = onDeleteItem) {
+                            ShoppingItemRow(
+                                item = item,
+                                onDeleteClick = {
+                                    onDeleteItem(item.id)
+                                },
+                                onCheckedChange = {
+                                    onToggleItem(item.id)
+                                },
+                            )
+                        }
+
                     }
 
                     if (boughtItems.isNotEmpty()) {
@@ -254,18 +263,18 @@ fun ShoppingListContent(
                         }
                     }
 
-                    items(boughtItems) { item ->
-                        ShoppingItemRow(
-                            item = item,
-                            key = item.id,
-                            onDeleteClick = {
-                                onDeleteItem(item.id)
-                            },
-                            onCheckedChange = {
-                                onToggleItem(item.id)
-                            }
-                        )
-
+                    items(boughtItems, key = { it.id }) { item ->
+                        SwipeToDeleteItemContainer(item = item, onDelete = onDeleteItem) {
+                            ShoppingItemRow(
+                                item = item,
+                                onDeleteClick = {
+                                    onDeleteItem(item.id)
+                                },
+                                onCheckedChange = {
+                                    onToggleItem(item.id)
+                                }
+                            )
+                        }
                     }
                 }
             }
@@ -273,6 +282,57 @@ fun ShoppingListContent(
     }
 }
 
+@Composable
+fun SwipeToDeleteItemContainer(
+    item: ShoppingItem,
+    onDelete: (String) -> Unit,
+    content: @Composable () -> Unit
+) {
+
+    val dismissState = rememberSwipeToDismissBoxState(
+        confirmValueChange = { it == SwipeToDismissBoxValue.EndToStart }
+    )
+
+    LaunchedEffect(dismissState.currentValue) {
+        if (dismissState.currentValue == SwipeToDismissBoxValue.EndToStart) {
+            delay(200)
+            onDelete(item.id)
+        }
+    }
+
+    SwipeToDismissBox(
+        state = dismissState,
+        enableDismissFromStartToEnd = false,
+        backgroundContent = { DismissItemBackground(dismissState) },
+        content = { content() },
+    )
+}
+@Composable
+fun DismissItemBackground(swipeState: SwipeToDismissBoxState){
+    /*val color = if (swipeState.dismissDirection == SwipeToDismissBoxValue.EndToStart) {
+        Color(0xFFFF5252)
+    } else {
+        Color.Transparent
+    }*/
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(Color(0xFFFF5252)),
+        contentAlignment = Alignment.CenterEnd
+    ) {
+        if (swipeState.dismissDirection == SwipeToDismissBoxValue.EndToStart) {
+            Icon(
+                painter = painterResource(id = R.drawable.delete_svg),
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.padding(end = 16.dp).size(24.dp)
+            )
+        }
+    }
+}
 
 @Composable
 fun MyCustomIndicator(state: PullToRefreshState, isRefreshing: Boolean) {
