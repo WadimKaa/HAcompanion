@@ -307,7 +307,7 @@ fun UnCompletedTaskItem(
             modifier = Modifier
                 .weight(1f)
                 .padding(start = 8.dp)
-                .clickable(onClick = { onAction(TodoListScreenAction.OnOpenTask("1")) })
+                .clickable(onClick = { onAction(TodoListScreenAction.OnOpenTask(item.id)) })
         )
         Icon(
             imageVector = Icons.AutoMirrored.Default.KeyboardArrowRight,
@@ -316,7 +316,7 @@ fun UnCompletedTaskItem(
             modifier = Modifier
                 .padding(end = 16.dp)
                 .size(36.dp)
-                .clickable(onClick = { onAction(TodoListScreenAction.OnOpenTask("1")) })
+                .clickable(onClick = { onAction(TodoListScreenAction.OnOpenTask(item.id)) })
         )
     }
 }

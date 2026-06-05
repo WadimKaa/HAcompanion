@@ -3,14 +3,16 @@ package com.powakaz.hacompanion
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.rememberNavController
 import androidx.navigation.compose.composable
-import com.powakaz.feature_tasks.presentation.todo_list.list.TodoListScreen
-import com.powakaz.feature_tasks.presentation.todo_list.list.TodoListScreenAction
+import androidx.navigation.compose.rememberNavController
 import com.powakaz.feature_tasks.presentation.todo_list.add_task.TaskScreen
 import com.powakaz.feature_tasks.presentation.todo_list.add_task.TaskScreenAction
 import com.powakaz.feature_tasks.presentation.todo_list.edit_task.EditTaskScreen
 import com.powakaz.feature_tasks.presentation.todo_list.edit_task.EditTaskScreenAction
+import com.powakaz.feature_tasks.presentation.todo_list.list.TodoListScreen
+import com.powakaz.feature_tasks.presentation.todo_list.list.TodoListScreenAction
+import com.powakaz.navigation_api.Screen
+
 
 @Composable
 fun AppHavHost(
@@ -28,7 +30,7 @@ fun AppHavHost(
                     }
 
                     is TodoListScreenAction.OnOpenTask -> {
-                        navController.navigate(Screen.EditTaskScreen)
+                        navController.navigate(Screen.EditTaskScreen(it.id))
                     }
                 }
             })

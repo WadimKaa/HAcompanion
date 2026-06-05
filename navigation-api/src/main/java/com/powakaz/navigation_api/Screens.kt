@@ -1,4 +1,4 @@
-package com.powakaz.hacompanion
+package com.powakaz.navigation_api
 
 import kotlinx.serialization.Serializable
 
@@ -12,5 +12,5 @@ sealed interface Screen {
     data object AddTodoItem : Screen
 
     @Serializable
-    data object EditTaskScreen : Screen
+    data class EditTaskScreen(val itemId : String) : Screen
 }

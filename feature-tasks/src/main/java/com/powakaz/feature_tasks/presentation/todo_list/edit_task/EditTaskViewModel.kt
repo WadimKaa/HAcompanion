@@ -1,8 +1,13 @@
 package com.powakaz.feature_tasks.presentation.todo_list.edit_task
 
+import android.util.Log
+import androidx.compose.ui.graphics.BlendMode.Companion.Screen
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import androidx.navigation.toRoute
 import com.powakaz.feature_tasks.domain.usecase.ChangeStateTodoItemUseCase
 import com.powakaz.feature_tasks.presentation.todo_list.add_task.TaskUiState
+import com.powakaz.navigation_api.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -34,13 +39,18 @@ sealed interface EditTaskUIEvent {
 
 @HiltViewModel
 class EditTaskViewModel @Inject constructor(
+    private val savedStateHandle: SavedStateHandle,
     changeStateTodoItemUseCase: ChangeStateTodoItemUseCase
 ) :
     ViewModel() {
 
     private val _uiState = MutableStateFlow(EditTaskUIState())
     val uiState: StateFlow<EditTaskUIState> = _uiState.asStateFlow()
+    private val taskId = savedStateHandle.toRoute<Screen.EditTaskScreen>().itemId
 
+    init {
+        Log.e("LOL", taskId)
+    }
 
     fun onEvent(editTaskUIEvent: EditTaskUIEvent) {
         when (editTaskUIEvent) {

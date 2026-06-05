@@ -54,6 +54,7 @@ dependencies {
     implementation(project(":data"))
     implementation(project(":feature-shopping"))
     implementation(project(":feature-tasks"))
+    implementation(project(":navigation-api"))
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
