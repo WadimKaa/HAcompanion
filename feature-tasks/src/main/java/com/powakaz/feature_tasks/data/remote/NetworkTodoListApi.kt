@@ -6,6 +6,7 @@ import com.powakaz.feature_tasks.data.remote.model.get_items.GetItemsBody
 import com.powakaz.feature_tasks.data.remote.model.add_item.InfoEntityDto
 import com.powakaz.feature_tasks.data.remote.model.change_status_item.ChangeStatusItemTodoBody
 import com.powakaz.feature_tasks.data.remote.model.delete_item.DeleteTodoItemRequestBody
+import com.powakaz.feature_tasks.data.remote.model.update_todo_item.UpdateTodoItemBody
 import retrofit2.http.Body
 import retrofit2.http.POST
 
@@ -34,4 +35,13 @@ interface NetworkTodoListApi {
     suspend fun changeStatusTodoItem(
         @Body changeStatusItemTodoBody: ChangeStatusItemTodoBody
     ) : List<InfoEntityDto>
+
+
+    @POST("api/services/todo/update_item")
+    suspend fun renameTodoItem(
+        @Body updateTodoItemBody: UpdateTodoItemBody
+    ) : List<InfoEntityDto>
+
+
+
 }

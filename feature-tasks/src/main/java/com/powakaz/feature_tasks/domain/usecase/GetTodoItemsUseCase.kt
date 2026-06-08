@@ -7,6 +7,6 @@ class GetTodoItemsUseCase @Inject constructor(
     private val repository: TodoRepository
 ) {
 
-    suspend operator fun invoke(entityId : String) = repository.getTodoItems(entityId)
+    suspend operator fun invoke() = repository.getTodoItems()
 
 }

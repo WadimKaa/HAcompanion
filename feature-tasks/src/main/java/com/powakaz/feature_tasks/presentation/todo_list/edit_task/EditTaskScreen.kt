@@ -98,20 +98,22 @@ fun EditTaskContent(
                     OutLengthError(inputState.lengthTextLimit)
                 }
             }
-            SaveButton(inputState, modifier = Modifier.align(Alignment.BottomCenter))
+            SaveButton(inputState, modifier = Modifier.align(Alignment.BottomCenter), onEvent)
         }
 
     }
 }
 
 @Composable
-fun SaveButton(inputState: EditTaskUIState, modifier: Modifier) {
+fun SaveButton(inputState: EditTaskUIState, modifier: Modifier, onEvent: (EditTaskUIEvent) -> Unit) {
     val disabledContainerColor =
         if (inputState.isOutLengthError) Color(0XFFfd7300) else Color(0xFFAF9CFF)
     val buttonText = if (inputState.isLoading) "Сохранение..." else "Сохранить изменения"
 
     Button(
-        onClick = {},
+        onClick = {
+            onEvent(EditTaskUIEvent.Save)
+        },
         modifier = modifier
             .padding(bottom = 16.dp, start = 16.dp, end = 16.dp)
             .fillMaxWidth(),

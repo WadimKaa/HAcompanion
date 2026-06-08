@@ -4,8 +4,13 @@ import android.util.Log
 import androidx.compose.ui.graphics.BlendMode.Companion.Screen
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
+import com.powakaz.core_network.model.NetworkResult
+import com.powakaz.feature_tasks.domain.model.TodoItem
 import com.powakaz.feature_tasks.domain.usecase.ChangeStateTodoItemUseCase
+import com.powakaz.feature_tasks.domain.usecase.GetTodoItemsUseCase
+import com.powakaz.feature_tasks.domain.usecase.RenameTaskUseCase
 import com.powakaz.feature_tasks.presentation.todo_list.add_task.TaskUiState
 import com.powakaz.navigation_api.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -13,6 +18,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 
@@ -22,7 +28,9 @@ data class EditTaskUIState(
     val lengthTextLimit: Int = 100,
     val minLengthText: Int = 5,
     val wasFocusedOnce: Boolean = false,
-    val isLoading: Boolean = false
+    val isLoading: Boolean = false,
+    val isCompleted: Boolean = false,
+    val taskId: String = ""
 ) {
     val isNeedHideHead: Boolean = wasFocusedOnce
     val isOutLengthError: Boolean = taskName.length > lengthTextLimit
@@ -35,12 +43,14 @@ sealed interface EditTaskUIEvent {
     data class FocusChange(val isFocused: Boolean) : EditTaskUIEvent
 
     object ClearTextField : EditTaskUIEvent
+    object Save : EditTaskUIEvent
 }
 
 @HiltViewModel
 class EditTaskViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
-    changeStateTodoItemUseCase: ChangeStateTodoItemUseCase
+    val renameTaskUseCase: RenameTaskUseCase,
+    val getTodoItemsUseCase: GetTodoItemsUseCase
 ) :
     ViewModel() {
 
@@ -49,7 +59,37 @@ class EditTaskViewModel @Inject constructor(
     private val taskId = savedStateHandle.toRoute<Screen.EditTaskScreen>().itemId
 
     init {
-        Log.e("LOL", taskId)
+        loadTasksList()
+    }
+
+    private fun loadTasksList() {
+        viewModelScope.launch {
+            val response = getTodoItemsUseCase()
+
+            when (response) {
+                is NetworkResult.Success -> {
+                    val choisedItem = response.data.filter { it.id == taskId }[0]
+
+                    _uiState.update {
+                        EditTaskUIState(
+                            taskName = choisedItem.title,
+                            isTextFieldFocused = true,
+                            wasFocusedOnce = true,
+                            isCompleted = choisedItem.isCompleted,
+                            taskId = choisedItem.id
+                        )
+                    }
+                }
+
+                is NetworkResult.Error -> {
+
+                }
+
+                is NetworkResult.Exception -> {
+
+                }
+            }
+        }
     }
 
     fun onEvent(editTaskUIEvent: EditTaskUIEvent) {
@@ -72,6 +112,39 @@ class EditTaskViewModel @Inject constructor(
             EditTaskUIEvent.ClearTextField -> {
                 _uiState.update {
                     it.copy(taskName = "")
+                }
+            }
+
+            EditTaskUIEvent.Save -> {
+                _uiState.update {
+                    it.copy(isLoading = true)
+                }
+
+                viewModelScope.launch {
+                    val todoItem = TodoItem(
+                        id = uiState.value.taskId,
+                        title = uiState.value.taskName,
+                        isCompleted = uiState.value.isCompleted
+                    )
+
+                    Log.e("LOL", todoItem.toString())
+
+                    val response = renameTaskUseCase(
+                       todoItem
+                    )
+
+                    when (response) {
+                        is NetworkResult.Error -> {
+                            Log.e("LOL", "error ${response.message}")
+                        }
+
+                        is NetworkResult.Exception -> Log.e(
+                            "LOL",
+                            "Exception ${response.e.message}"
+                        )
+
+                        is NetworkResult.Success<*> -> Log.e("LOL", "Success")
+                    }
                 }
             }
         }

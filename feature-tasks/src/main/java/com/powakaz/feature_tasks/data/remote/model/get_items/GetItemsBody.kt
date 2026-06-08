@@ -6,4 +6,5 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class GetItemsBody(
     @SerialName("entity_id")
-    val entityId: String)
+    val entityId: String
+)

@@ -11,6 +11,7 @@ import com.powakaz.feature_tasks.data.remote.model.add_item.AddItemBody
 import com.powakaz.feature_tasks.data.remote.model.change_status_item.ChangeStatusItemTodoBody
 import com.powakaz.feature_tasks.data.remote.model.delete_item.DeleteTodoItemRequestBody
 import com.powakaz.feature_tasks.data.remote.model.get_items.GetItemsBody
+import com.powakaz.feature_tasks.data.remote.model.update_todo_item.UpdateTodoItemBody
 import com.powakaz.feature_tasks.domain.model.Response
 import com.powakaz.feature_tasks.domain.model.TodoItem
 import com.powakaz.feature_tasks.domain.repository.TodoRepository
@@ -42,10 +43,9 @@ class TodoRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getTodoItems(listName: String): NetworkResult<List<TodoItem>> {
-
+    override suspend fun getTodoItems(): NetworkResult<List<TodoItem>> {
         return safeApiCall {
-            val response = api.getTodoItems(GetItemsBody(listName))
+            val response = api.getTodoItems(GetItemsBody("todo.moi_dela"))
 
             response.serviceResponseDto.myTasksDto.items.map {
                 it.toDomain()
@@ -89,6 +89,19 @@ class TodoRepositoryImpl @Inject constructor(
                     listId = "todo.moi_dela",
                     itemId = entityId,
                     status = status
+                )
+            ).toDomain()
+        }
+    }
+
+
+    override suspend fun renameTodoItem(todoItem: TodoItem): NetworkResult<Response> {
+        return safeApiCall {
+            api.renameTodoItem(
+                UpdateTodoItemBody(
+                    listId = "todo.moi_dela",
+                    entityId = todoItem.id,
+                    entityName = todoItem.title
                 )
             ).toDomain()
         }
