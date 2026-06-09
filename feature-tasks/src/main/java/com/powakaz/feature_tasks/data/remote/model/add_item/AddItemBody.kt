@@ -4,7 +4,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-class AddItemBody(
+data class AddItemBody(
     @SerialName("entity_id")
     val listName : String,
     @SerialName("item")

@@ -10,6 +10,7 @@ import com.powakaz.core_network.model.NetworkResult
 import com.powakaz.feature_tasks.domain.model.TodoItem
 import com.powakaz.feature_tasks.domain.usecase.ChangeStateTodoItemUseCase
 import com.powakaz.feature_tasks.domain.usecase.GetTodoItemsUseCase
+import com.powakaz.feature_tasks.domain.usecase.ObserveItemById
 import com.powakaz.feature_tasks.domain.usecase.RenameTaskUseCase
 import com.powakaz.feature_tasks.presentation.todo_list.add_task.TaskUiState
 import com.powakaz.navigation_api.Screen
@@ -50,7 +51,7 @@ sealed interface EditTaskUIEvent {
 class EditTaskViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     val renameTaskUseCase: RenameTaskUseCase,
-    val getTodoItemsUseCase: GetTodoItemsUseCase
+    val observeItemById: ObserveItemById
 ) :
     ViewModel() {
 
@@ -64,29 +65,17 @@ class EditTaskViewModel @Inject constructor(
 
     private fun loadTasksList() {
         viewModelScope.launch {
-            val response = getTodoItemsUseCase()
-
-            when (response) {
-                is NetworkResult.Success -> {
-                    val choisedItem = response.data.filter { it.id == taskId }[0]
-
+            observeItemById(taskId).collect { item ->
+                item?.let {
                     _uiState.update {
-                        EditTaskUIState(
-                            taskName = choisedItem.title,
+                        it.copy(
+                            taskName = item.title,
                             isTextFieldFocused = true,
                             wasFocusedOnce = true,
-                            isCompleted = choisedItem.isCompleted,
-                            taskId = choisedItem.id
+                            isCompleted = item.isCompleted,
+                            taskId = item.id
                         )
                     }
-                }
-
-                is NetworkResult.Error -> {
-
-                }
-
-                is NetworkResult.Exception -> {
-
                 }
             }
         }

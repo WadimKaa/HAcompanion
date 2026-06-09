@@ -35,7 +35,7 @@ class TodoRepositoryImpl @Inject constructor(
         return try {
             val response = api.getTodoItems(GetItemsBody(listName))
             val entities = response.serviceResponseDto.myTasksDto.items.map { it.toEntity() }
-            todoDao.insertItems(entities)
+            todoDao.syncItems(entities)
 
             Result.success(Unit)
         } catch (e: Exception) {
@@ -96,6 +96,9 @@ class TodoRepositoryImpl @Inject constructor(
 
 
     override suspend fun renameTodoItem(todoItem: TodoItem): NetworkResult<Response> {
+        todoDao.updateName(todoItem.id, todoItem.title)
+
+
         return safeApiCall {
             api.renameTodoItem(
                 UpdateTodoItemBody(
@@ -104,6 +107,12 @@ class TodoRepositoryImpl @Inject constructor(
                     entityName = todoItem.title
                 )
             ).toDomain()
+        }
+    }
+
+    override fun observeTodoItem(id: String): Flow<TodoItem?> {
+        return todoDao.observeById(id).map {
+            it?.toDomain()
         }
     }
 }

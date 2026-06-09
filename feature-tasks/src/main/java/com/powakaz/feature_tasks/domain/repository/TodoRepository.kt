@@ -14,6 +14,7 @@ interface TodoRepository {
 
 
     fun observeTodoItems(): Flow<List<TodoItem>>
+    fun observeTodoItem(id: String): Flow<TodoItem?>
     suspend fun refreshTodoItems(listName: String) : Result<Unit>
 
 }
