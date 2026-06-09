@@ -127,7 +127,7 @@ fun TodoListContent(
                 }
                 if (inputState.isCompletedListExpanded)
                     items(items = inputState.completedItems, key = { it.id }) { item ->
-                        CompletedTaskItem(item, modifier = Modifier.animateItem())
+                        CompletedTaskItem(item, modifier = Modifier.animateItem(), onEvent)
                     }
             }
 
@@ -137,7 +137,11 @@ fun TodoListContent(
 }
 
 @Composable
-fun CompletedTaskItem(item: TodoItem, modifier: Modifier = Modifier) {
+fun CompletedTaskItem(
+    item: TodoItem,
+    modifier: Modifier = Modifier,
+    onEvent: (TodoListUIEvent) -> Unit
+) {
     HorizontalDivider(modifier = modifier.padding(horizontal = 16.dp))
     Row(
         modifier = modifier
@@ -152,6 +156,7 @@ fun CompletedTaskItem(item: TodoItem, modifier: Modifier = Modifier) {
             modifier = Modifier
                 .padding(start = 16.dp)
                 .size(36.dp)
+                .clickable(onClick = { onEvent(TodoListUIEvent.ChangeItemStatus(item.id)) })
         )
         Text(
             text = item.title,

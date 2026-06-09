@@ -81,8 +81,9 @@ class TodoRepositoryImpl @Inject constructor(
         entityId: String,
         isCompleted: Boolean
     ): NetworkResult<Response> {
-        val status = if (isCompleted) "completed" else "needs_action"
+        todoDao.updateStatus(entityId, isCompleted)
 
+        val status = if (isCompleted) "completed" else "needs_action"
         return safeApiCall {
             api.changeStatusTodoItem(
                 changeStatusItemTodoBody = ChangeStatusItemTodoBody(

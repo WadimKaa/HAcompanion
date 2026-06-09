@@ -3,6 +3,7 @@ package com.powakaz.feature_tasks.presentation.todo_list.list
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.powakaz.feature_tasks.domain.model.TodoItem
+import com.powakaz.feature_tasks.domain.usecase.ChangeStateTodoItemUseCase
 import com.powakaz.feature_tasks.domain.usecase.ObserveTodoItemsUseCase
 import com.powakaz.feature_tasks.domain.usecase.RefreshTodoItemsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -37,7 +38,8 @@ sealed interface TodoListUIEvent {
 @HiltViewModel
 class TodoListViewModel @Inject constructor(
     private val observeTodoItemsUseCase: ObserveTodoItemsUseCase,
-    private val refreshTodoItemsUseCase: RefreshTodoItemsUseCase
+    private val refreshTodoItemsUseCase: RefreshTodoItemsUseCase,
+    private val changeStateTodoItemUseCase: ChangeStateTodoItemUseCase
 ) :
     ViewModel() {
 
@@ -83,8 +85,21 @@ class TodoListViewModel @Inject constructor(
             }
 
             is TodoListUIEvent.ChangeItemStatus -> {
-                _state.update {
-                    it.copy()
+                /*_state.update { item ->
+                    item.copy(mainList = item.mainList.map {
+                        if (it.id == todoListUIEvent.id) {
+                            it.copy(isCompleted = !it.isCompleted)
+                        }else{
+                            it
+                        }
+                    })
+                }*/
+                viewModelScope.launch {
+                    changeStateTodoItemUseCase(
+                        todoListUIEvent.id,
+                        !_state.value.mainList.filter { it.id == todoListUIEvent.id }[0].isCompleted
+                    )
+
                 }
             }
         }
