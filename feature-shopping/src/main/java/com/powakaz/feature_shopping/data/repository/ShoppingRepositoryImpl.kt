@@ -6,6 +6,7 @@ import com.powakaz.feature_shopping.data.api.ShoppingApi
 import com.powakaz.feature_shopping.data.mapper.toDomain
 import com.powakaz.feature_shopping.data.model.AddShoppingItemRequest
 import com.powakaz.feature_shopping.data.model.DeleteItemRequest
+import com.powakaz.feature_shopping.data.model.ShoppingItemDto
 import com.powakaz.feature_shopping.data.model.TodoRequest
 import com.powakaz.feature_shopping.data.model.UpdateItemRequest
 import com.powakaz.feature_shopping.domain.model.ShoppingItem
@@ -73,4 +74,5 @@ class ShoppingRepositoryImpl(private val api: ShoppingApi) : ShoppingRepository 
             )
         }
     }
+
 }

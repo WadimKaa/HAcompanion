@@ -1,6 +1,7 @@
 package com.powakaz.feature_shopping.presentation.list.components
 
 import android.R.id
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,6 +16,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -29,14 +31,31 @@ import com.powakaz.feature_shopping.domain.model.ShoppingItem
 fun ShoppingItemRow(
     item: ShoppingItem,
     onDeleteClick: () -> Unit,
-    onCheckedChange: (Boolean) -> Unit
+    onCheckedChange: (Boolean) -> Unit,
+    isSelected: Boolean,
+    onToggleSelection: () -> Unit,
+    onClick: () -> Unit,
 ) {
+
+    val cardShape = RoundedCornerShape(12.dp)
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 4.dp),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+            .padding(horizontal = 16.dp, vertical = 4.dp)
+            .clip(cardShape)
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = onToggleSelection
+            ),
+        shape = cardShape,
+        colors = CardDefaults.cardColors(
+            containerColor = if (isSelected) {
+                Color(0xFFDEF6E0)
+            } else {
+                Color.White
+            }
+        ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
 
     ) {
@@ -53,7 +72,7 @@ fun ShoppingItemRow(
                     ),
                     modifier = Modifier.size(26.dp),
                     contentDescription = null,
-                    tint = if (item.isCompleted) Color(0xFF4CAF50) else Color.Gray
+                    tint = if (item.isCompleted) Color(0xFF4CAF50) else Color(0xFF4CAF50)
                 )
             }
 
@@ -67,13 +86,15 @@ fun ShoppingItemRow(
 
             Spacer(modifier = Modifier.weight(1f))
 
-            IconButton(onClick = onDeleteClick) {
-                Icon(
-                    painter = painterResource(id = R.drawable.delete_svg),
-                    contentDescription = "Удалить",
-                    tint = Color.Unspecified,
-                    modifier = Modifier.size(24.dp)
-                )
+            if (!isSelected) {
+                IconButton(onClick = onDeleteClick) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.delete_svg),
+                        contentDescription = "Удалить",
+                        tint = Color.Unspecified,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
             }
         }
     }
@@ -85,7 +106,10 @@ fun ShoppingItemRowPreview() {
     ShoppingItemRow(
         item = ShoppingItem(id = "1", name = "Молоко 1.5%", isCompleted = false),
         onDeleteClick = {},
-        onCheckedChange = {}
+        onCheckedChange = {},
+        isSelected = false,
+        onToggleSelection = {},
+        onClick = {},
     )
 }
 
@@ -95,6 +119,9 @@ fun ShoppingItemRowCompletedPreview() {
     ShoppingItemRow(
         item = ShoppingItem(id = "2", name = "Сыр", isCompleted = true),
         onDeleteClick = {},
-        onCheckedChange = {}
+        onCheckedChange = {},
+        isSelected = false,
+        onToggleSelection = {},
+        onClick = {},
     )
 }

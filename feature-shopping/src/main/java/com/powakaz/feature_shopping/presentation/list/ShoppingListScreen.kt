@@ -2,7 +2,6 @@ package com.powakaz.feature_shopping.presentation.list
 
 import android.widget.Toast
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -18,20 +17,20 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SwipeToDismissBox
-import androidx.compose.material3.SwipeToDismissBoxState
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshState
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
@@ -40,7 +39,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -59,12 +57,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.powakaz.feature_shopping.R
 import com.powakaz.feature_shopping.domain.model.ShoppingItem
 import com.powakaz.feature_shopping.presentation.list.components.ShoppingItemRow
 import kotlinx.coroutines.delay
-import okhttp3.internal.http2.Http2Reader
 
 
 @Composable
@@ -77,6 +73,7 @@ fun ShoppingListScreen(
 
 
     ShoppingListContent(
+        allShoppingList = uiState.allList,
         boughtItems = uiState.boughtItems,
         notBoughtItems = uiState.notBoughtItems,
         onNavigateToCreate = onNavigateToCreate,
@@ -89,7 +86,21 @@ fun ShoppingListScreen(
         isRefreshing = uiState.isRefreshing,
         onRefresh = {
             viewModel.loadItems(isPullToRefresh = true)
+        },
+        onToggleSelection = { itemId ->
+            viewModel.toggleSelection(itemId)
+        },
+        onClearSelection = {
+            viewModel.clearSelection()
+        },
+        onDeleteSelected = {
+            viewModel.deleteSelectedItems()
+        },
+        selectedItems = uiState.selectedItems,
+        onDeleteAllList = {
+            viewModel.deleteAllItems()
         }
+
     )
 
     LaunchedEffect(uiState.errorResId) {
@@ -102,76 +113,41 @@ fun ShoppingListScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ShoppingListContent(
+    allShoppingList: List<ShoppingItem>,
     boughtItems: List<ShoppingItem>,
     notBoughtItems: List<ShoppingItem>,
     onNavigateToCreate: () -> Unit,
+
     onToggleItem: (String) -> Unit,
     onDeleteItem: (String) -> Unit,
+
     isRefreshing: Boolean,
-    onRefresh: () -> Unit
+    onRefresh: () -> Unit,
+
+    selectedItems: Set<String>,
+    onToggleSelection: (String) -> Unit,
+    onClearSelection: () -> Unit,
+    onDeleteSelected: () -> Unit,
+
+    onDeleteAllList: () -> Unit
 
 ) {
     val pullToRefreshState = rememberPullToRefreshState()
+    val isInSelectionMode = selectedItems.isNotEmpty()
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Row(
-                        modifier = Modifier.padding(end = 10.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.shopping_basket),
-                            contentDescription = null,
-                            tint = Color.Unspecified,
-                            modifier = Modifier
-                                .size(28.dp)
-
-                        )
-
-                        Spacer(modifier = Modifier.width(12.dp))
-
-                        Text(
-                            text = stringResource(id = R.string.shopping_list),
-                            color = Color.Black,
-                            fontSize = 22.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            fontFamily = FontFamily.Cursive
-                        )
-
-                    }
-
-                },
-
-                actions = {
-                    TextButton(
-                        onClick = {
-                            //удалить весь список
-                        },
-                        modifier = Modifier
-                            .size(130.dp)
-                            .offset(x = (-4).dp)
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.delete_svg),
-                            contentDescription = "Очистить всё",
-                            tint = Color.Unspecified,
-                            modifier = Modifier.size(24.dp)
-                        )
-
-                        Spacer(modifier = Modifier.width(2.dp))
-
-                        Text(
-                            text = stringResource(id = R.string.delete_all),
-                            color = Color.DarkGray,
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.SemiBold
-
-                        )
-                    }
-                }
-            )
+            if (isInSelectionMode) {
+                SelectionTopBar(
+                    count = selectedItems.size,
+                    onClose = onClearSelection,
+                    onDelete = onDeleteSelected
+                )
+            } else {
+                DefaultTopBar(
+                    onDeleteAll = onDeleteAllList
+                )
+            }
         },
         floatingActionButton = {
             FloatingActionButton(
@@ -200,7 +176,7 @@ fun ShoppingListContent(
             modifier = Modifier.padding(padding)
         ) {
 
-            Divider(
+            HorizontalDivider(
                 color = Color.LightGray,
                 thickness = 1.dp
             )
@@ -236,6 +212,7 @@ fun ShoppingListContent(
                     }
 
                     items(notBoughtItems, key = { it.id }) { item ->
+                        val isSelected = selectedItems.contains(item.id)
                         SwipeToDeleteItemContainer(item = item, onDelete = onDeleteItem) {
                             ShoppingItemRow(
                                 item = item,
@@ -245,6 +222,16 @@ fun ShoppingListContent(
                                 onCheckedChange = {
                                     onToggleItem(item.id)
                                 },
+                                isSelected = isSelected,
+                                onToggleSelection = {
+                                    onToggleSelection(item.id)
+                                },
+                                onClick = {
+                                    if (isInSelectionMode) onToggleSelection(item.id)
+                                    else { /* открыть детали? */
+                                    }
+                                }
+
                             )
                         }
 
@@ -264,6 +251,7 @@ fun ShoppingListContent(
                     }
 
                     items(boughtItems, key = { it.id }) { item ->
+                        val isSelected = selectedItems.contains(item.id)
                         SwipeToDeleteItemContainer(item = item, onDelete = onDeleteItem) {
                             ShoppingItemRow(
                                 item = item,
@@ -272,6 +260,15 @@ fun ShoppingListContent(
                                 },
                                 onCheckedChange = {
                                     onToggleItem(item.id)
+                                },
+                                isSelected = isSelected,
+                                onToggleSelection = {
+                                    onToggleSelection(item.id)
+                                },
+                                onClick = {
+                                    if (isInSelectionMode) onToggleSelection(item.id)
+                                    else { /* открыть детали? */
+                                    }
                                 }
                             )
                         }
@@ -303,18 +300,141 @@ fun SwipeToDeleteItemContainer(
     SwipeToDismissBox(
         state = dismissState,
         enableDismissFromStartToEnd = false,
-        backgroundContent = { DismissItemBackground(dismissState) },
+        backgroundContent = { DismissItemBackground() },
         content = { content() },
     )
 }
-@Composable
-fun DismissItemBackground(swipeState: SwipeToDismissBoxState){
-    /*val color = if (swipeState.dismissDirection == SwipeToDismissBoxValue.EndToStart) {
-        Color(0xFFFF5252)
-    } else {
-        Color.Transparent
-    }*/
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SelectionTopBar(count: Int, onClose: () -> Unit, onDelete: () -> Unit) {
+    TopAppBar(
+        title = {
+
+            Row(
+                //  modifier = Modifier.padding(end = 0.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(
+                    onClick = onClose,
+                    modifier = Modifier
+                        .size(40.dp)
+                        .offset(x = (-6).dp)
+                )
+                {
+                    Icon(
+                        painter = painterResource(id = R.drawable.close),
+                        contentDescription = "выйти",
+                        tint = Color.White,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(2.dp))
+
+                Text(
+                    text = "Выбрано: $count",
+                    color = Color.White,
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    fontFamily = FontFamily.SansSerif
+                )
+            }
+        },
+        actions = {
+            TextButton(
+                onClick = onDelete,
+                modifier = Modifier
+                    .size(130.dp)
+                    .offset(x = (14).dp)
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.delete_svg),
+                    contentDescription = "Очистить выделенное",
+                    tint = Color.White,
+                    modifier = Modifier.size(24.dp)
+                )
+
+                Spacer(modifier = Modifier.width(2.dp))
+
+                Text(
+                    text = stringResource(id = R.string.delete),
+                    color = Color.White,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold
+
+                )
+            }
+        },
+        colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF4CAF50))
+    )
+
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DefaultTopBar(onDeleteAll: () -> Unit) {
+    TopAppBar(
+        title = {
+            Row(
+                modifier = Modifier.padding(end = 10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.shopping_basket),
+                    contentDescription = null,
+                    tint = Color.Unspecified,
+                    modifier = Modifier
+                        .size(28.dp)
+
+                )
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                Text(
+                    text = stringResource(id = R.string.shopping_list),
+                    color = Color.Black,
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    fontFamily = FontFamily.Cursive
+                )
+
+            }
+
+        },
+
+        actions = {
+            TextButton(
+                onClick = {
+                    onDeleteAll()
+                },
+                modifier = Modifier
+                    .size(130.dp)
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.delete_svg),
+                    contentDescription = "Очистить всё",
+                    tint = Color.Unspecified,
+                    modifier = Modifier.size(24.dp)
+                )
+
+                Spacer(modifier = Modifier.width(2.dp))
+
+                Text(
+                    text = stringResource(id = R.string.delete_all),
+                    color = Color.DarkGray,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold
+
+                )
+            }
+        }
+    )
+}
+
+
+@Composable
+fun DismissItemBackground() {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -323,14 +443,14 @@ fun DismissItemBackground(swipeState: SwipeToDismissBoxState){
             .background(Color(0xFFFF5252)),
         contentAlignment = Alignment.CenterEnd
     ) {
-        if (swipeState.dismissDirection == SwipeToDismissBoxValue.EndToStart) {
-            Icon(
-                painter = painterResource(id = R.drawable.delete_svg),
-                contentDescription = null,
-                tint = Color.White,
-                modifier = Modifier.padding(end = 16.dp).size(24.dp)
-            )
-        }
+        Icon(
+            painter = painterResource(id = R.drawable.delete_svg),
+            contentDescription = null,
+            tint = Color.White,
+            modifier = Modifier
+                .padding(end = 16.dp)
+                .size(24.dp)
+        )
     }
 }
 
@@ -388,6 +508,7 @@ fun MyCustomIndicator(state: PullToRefreshState, isRefreshing: Boolean) {
 @Composable
 fun ShoppingListScreenPreview() {
     ShoppingListContent(
+        allShoppingList = listOf(),
         boughtItems = listOf(
 
             ShoppingItem("1", "Молоко 1.5%", false),
@@ -406,7 +527,12 @@ fun ShoppingListScreenPreview() {
         onToggleItem = {},
         onDeleteItem = {},
         onRefresh = {},
-        isRefreshing = false
+        isRefreshing = false,
+        onToggleSelection = {},
+        onClearSelection = {},
+        onDeleteSelected = {},
+        selectedItems = setOf("1", "2", "3"),
+        onDeleteAllList = {}
     )
 }
 

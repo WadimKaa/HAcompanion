@@ -1,5 +1,6 @@
 package com.powakaz.feature_shopping.presentation.list
 
+import android.util.Log
 import android.widget.Toast
 
 import androidx.lifecycle.ViewModel
@@ -11,6 +12,9 @@ import com.powakaz.feature_shopping.domain.usecase.DeleteShoppingItemUseCase
 import com.powakaz.feature_shopping.domain.usecase.GetShoppingItemsUseCase
 import com.powakaz.feature_shopping.domain.usecase.UpdateShoppingItemUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -33,7 +37,6 @@ class ShoppingListViewModel @Inject constructor(
 
     init {
         loadItems()
-
     }
 
 
@@ -44,7 +47,7 @@ class ShoppingListViewModel @Inject constructor(
                 _uiState.update { it.copy(isRefreshing = true) }
                 delay(500)
             } else {
-                if (_uiState.value.items.isEmpty()) {
+                if (_uiState.value.allList.isEmpty()) {
                     _uiState.update {
                         it.copy(isLoading = true)
                     }
@@ -55,11 +58,12 @@ class ShoppingListViewModel @Inject constructor(
                 is NetworkResult.Success -> {
                     _uiState.update {
                         it.copy(
-                            items = result.data,
+                            allList = result.data,
                             isLoading = false,
                             isRefreshing = false
                         )
                     }
+                    Log.e("LOL", result.data.size.toString())
                 }
 
                 is NetworkResult.Error -> {
@@ -87,7 +91,7 @@ class ShoppingListViewModel @Inject constructor(
     }
 
     fun toggleItem(itemId: String) {
-        val item = _uiState.value.items.find { it.id == itemId } ?: return
+        val item = _uiState.value.allList.find { it.id == itemId } ?: return
         val newStatus = !item.isCompleted
 
         updateLocalStatus(itemId, newStatus)
@@ -112,22 +116,22 @@ class ShoppingListViewModel @Inject constructor(
 
     private fun updateLocalStatus(itemId: String, isCompleted: Boolean) {
         _uiState.update { currentState ->
-            val updatedItems = currentState.items.map { it ->
+            val updatedItems = currentState.allList.map { it ->
                 if (it.id == itemId) {
                     it.copy(isCompleted = !it.isCompleted)
                 } else {
                     it
                 }
             }
-            currentState.copy(items = updatedItems)
+            currentState.copy(allList = updatedItems)
         }
     }
 
     fun deleteItem(itemId: String) {
-        val oldShoppingList = _uiState.value.items
+        val oldShoppingList = _uiState.value.allList
 
         _uiState.update { state ->
-            state.copy(items = state.items.filter { it.id != itemId })
+            state.copy(allList = state.allList.filter { it.id != itemId })
         }
 
         viewModelScope.launch {
@@ -135,23 +139,107 @@ class ShoppingListViewModel @Inject constructor(
 
             if (result !is NetworkResult.Success) {
                 _uiState.update {
-                    it.copy(items = oldShoppingList, errorResId = R.string.error_update_item)
+                    it.copy(allList = oldShoppingList, errorResId = R.string.error_update_item)
                 }
             }
         }
     }
 
+    fun toggleSelection(itemId: String) { ///
+        _uiState.update { state ->
+            val newSelection = state.selectedItems.toMutableSet()
+            if (newSelection.contains(itemId)) {
+                newSelection.remove(itemId)
+            } else {
+                newSelection.add(itemId)
+            }
+            state.copy(selectedItems = newSelection)
+        }
+    }
+
+    fun clearSelection() {
+        _uiState.update { it.copy(selectedItems = emptySet()) }
+    }
+
+    fun deleteSelectedItems() {
+        val selectedToDelete = _uiState.value.selectedItems.toList()
+
+        if (selectedToDelete.isEmpty()) return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isRefreshing = true) }
+
+            val allSuccess = parallelDeleteItem(selectedToDelete)
+
+            clearSelection()
+            loadItems()
+
+            _uiState.update {
+                it.copy(
+                    isRefreshing = false,
+                    errorResId = if (!allSuccess) R.string.error_update_item else null
+                )
+            }
+        }
+    }
+
+    private suspend fun parallelDeleteItem(selectedItemToDelete: List<String>): Boolean =
+        coroutineScope {
+            val result = selectedItemToDelete.map { itemId ->
+                async {
+                    deleteShoppingItemsUseCase(itemId)
+                }
+            }.awaitAll()
+
+            result.all {
+                it is NetworkResult.Success
+            }
+        }
+
+    fun deleteAllItems() {
+        val allItems = _uiState.value.allList
+
+        if (allItems.isEmpty()) return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isRefreshing = true) }
+
+            val allSuccess = parallelDeleteAllItems(allItems)
+
+            loadItems()
+
+            _uiState.update {
+                it.copy(
+                    isRefreshing = false,
+                    errorResId = if (!allSuccess) R.string.error_update_item else null
+                )
+            }
+        }
+    }
+
+
+    private suspend fun parallelDeleteAllItems(allItems: List<ShoppingItem>): Boolean = coroutineScope {
+
+        val results = allItems.map { item ->
+            async {
+                deleteShoppingItemsUseCase(item.id)
+            }
+        }.awaitAll()
+
+        results.all { it is NetworkResult.Success }
+    }
+
     data class ShoppingListUiState(
-        val items: List<ShoppingItem> = emptyList(),
+        val allList: List<ShoppingItem> = emptyList(),
+        val selectedItems: Set<String> = emptySet(),
         val isLoading: Boolean = false,
         val error: String? = null,
         val errorResId: Int? = null,
         val isRefreshing: Boolean = false
     ) {
         val boughtItems: List<ShoppingItem>
-            get() = items.filter { it.isCompleted }
+            get() = allList.filter { it.isCompleted }
 
         val notBoughtItems: List<ShoppingItem>
-            get() = items.filter { !it.isCompleted }
+            get() = allList.filter { !it.isCompleted }
+
     }
 }
