@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.powakaz.feature_tasks.domain.model.TodoItem
 import com.powakaz.feature_tasks.domain.usecase.ChangeStateTodoItemUseCase
+import com.powakaz.feature_tasks.domain.usecase.DeleteTodoItemUseCase
 import com.powakaz.feature_tasks.domain.usecase.ObserveTodoItemsUseCase
 import com.powakaz.feature_tasks.domain.usecase.RefreshTodoItemsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -29,6 +30,7 @@ data class TodoListState(
 
 sealed interface TodoListUIEvent {
     data class ChangeItemStatus(val id: String) : TodoListUIEvent
+    data class DeleteItem(val id: String) : TodoListUIEvent
 
     object ChangeExpandUncompletedList : TodoListUIEvent
     object ChangeExpandCompletedList : TodoListUIEvent
@@ -39,7 +41,8 @@ sealed interface TodoListUIEvent {
 class TodoListViewModel @Inject constructor(
     private val observeTodoItemsUseCase: ObserveTodoItemsUseCase,
     private val refreshTodoItemsUseCase: RefreshTodoItemsUseCase,
-    private val changeStateTodoItemUseCase: ChangeStateTodoItemUseCase
+    private val changeStateTodoItemUseCase: ChangeStateTodoItemUseCase,
+    private val deleteTodoItemUseCase: DeleteTodoItemUseCase
 ) :
     ViewModel() {
 
@@ -100,6 +103,12 @@ class TodoListViewModel @Inject constructor(
                         !_state.value.mainList.filter { it.id == todoListUIEvent.id }[0].isCompleted
                     )
 
+                }
+            }
+
+            is TodoListUIEvent.DeleteItem -> {
+                viewModelScope.launch {
+                    deleteTodoItemUseCase(todoListUIEvent.id)
                 }
             }
         }

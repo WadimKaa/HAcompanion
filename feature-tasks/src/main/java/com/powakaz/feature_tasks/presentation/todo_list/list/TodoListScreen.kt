@@ -17,13 +17,18 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MovableContent
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -98,27 +103,32 @@ fun TodoListContent(
         ) {
 
             LazyColumn(modifier = Modifier.padding(top = 16.dp)) {
-                item {
+                item(key = "uncompleted_head") {
                     UncompletedListHead(
                         inputState.unCompletedItemsSize,
                         isExpanded = inputState.isUnCompletedListExpanded,
-                        onClickExpand = { onEvent(TodoListUIEvent.ChangeExpandUncompletedList) })
+                        onClickExpand = { onEvent(TodoListUIEvent.ChangeExpandUncompletedList) },
+                        modifier = Modifier.animateItem()
+                    )
                 }
                 if (inputState.isUnCompletedListExpanded) {
                     items(items = inputState.unCompletedItems, key = { it.id }) { item ->
-                        UnCompletedTaskItem(
-                            item, modifier = Modifier.animateItem(
-                                fadeInSpec = tween(300),
-                                fadeOutSpec = tween(300),
-                                placementSpec = tween(300)
-                            ), onEvent, onAction
-                        )
+                        SwipeToDeleteContainer(
+                            onDelete = { onEvent(TodoListUIEvent.DeleteItem(item.id)) },
+                            modifier = Modifier.animateItem()
+                        ) {
+                            UnCompletedTaskItem(
+                                item = item,
+                                onEvent = onEvent,
+                                onAction = onAction
+                            )
+                        }
                     }
                 }
-                item {
+                item(key = "completed_head") {
                     CompletedListHead(
-                        inputState.completedItemsSize,
-                        inputState.isCompletedListExpanded,
+                        size = inputState.completedItemsSize,
+                        completedListExpanded = inputState.isCompletedListExpanded,
                         onExpandClick = {
                             onEvent(TodoListUIEvent.ChangeExpandCompletedList)
                         },
@@ -127,7 +137,16 @@ fun TodoListContent(
                 }
                 if (inputState.isCompletedListExpanded)
                     items(items = inputState.completedItems, key = { it.id }) { item ->
-                        CompletedTaskItem(item, modifier = Modifier.animateItem(), onEvent)
+                        SwipeToDeleteContainer(
+                            onDelete = { onEvent(TodoListUIEvent.DeleteItem(item.id)) },
+                            modifier = Modifier.animateItem()
+                        ) {
+                            CompletedTaskItem(
+                                item = item,
+                                modifier = Modifier.animateItem(),
+                                onEvent = onEvent
+                            )
+                        }
                     }
             }
 
@@ -136,44 +155,91 @@ fun TodoListContent(
 
 }
 
+
+@Composable
+fun SwipeToDeleteContainer(
+    onDelete: () -> Unit,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit
+) {
+    val state = rememberSwipeToDismissBoxState(
+        confirmValueChange = { value ->
+            if (value == SwipeToDismissBoxValue.EndToStart) {
+                onDelete()
+                true
+            } else {
+                false
+            }
+        }
+    )
+
+    SwipeToDismissBox(
+        state = state,
+        modifier = modifier,
+        enableDismissFromStartToEnd = false,
+        backgroundContent = {
+            val color = if (state.dismissDirection == SwipeToDismissBoxValue.EndToStart) {
+                Color(0xFFF44336) // Красный
+            } else Color.Transparent
+
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(color)
+                    .padding(horizontal = 20.dp),
+                contentAlignment = Alignment.CenterEnd
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = "Delete",
+                    tint = Color.White
+                )
+            }
+        },
+        content = { content() } // Сама карточка задачи
+    )
+}
+
 @Composable
 fun CompletedTaskItem(
     item: TodoItem,
     modifier: Modifier = Modifier,
     onEvent: (TodoListUIEvent) -> Unit
 ) {
-    HorizontalDivider(modifier = modifier.padding(horizontal = 16.dp))
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(top = 8.dp, bottom = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            painter = painterResource(R.drawable.ic_tasks_completed_list_item),
-            contentDescription = null,
-            tint = Color.Unspecified,
+    Column(modifier = modifier) {
+        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+        Row(
             modifier = Modifier
-                .padding(start = 16.dp)
-                .size(36.dp)
-                .clickable(onClick = { onEvent(TodoListUIEvent.ChangeItemStatus(item.id)) })
-        )
-        Text(
-            text = item.title,
-            fontWeight = FontWeight.SemiBold,
-            color = Color(0xFF131826),
-            modifier = Modifier
-                .weight(1f)
-                .padding(start = 8.dp)
-        )
-        Icon(
-            imageVector = Icons.AutoMirrored.Default.KeyboardArrowRight,
-            contentDescription = null,
-            tint = Color(0xFF9190a3),
-            modifier = Modifier
-                .padding(end = 16.dp)
-                .size(36.dp)
-        )
+                .fillMaxWidth()
+                .padding(top = 8.dp, bottom = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_tasks_completed_list_item),
+                contentDescription = null,
+                tint = Color.Unspecified,
+                modifier = Modifier
+                    .padding(start = 16.dp)
+                    .size(36.dp)
+                    .clickable(onClick = { onEvent(TodoListUIEvent.ChangeItemStatus(item.id)) })
+            )
+            Text(
+                text = item.title,
+                fontWeight = FontWeight.SemiBold,
+                color = Color(0xFF131826),
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = 8.dp)
+            )
+            Icon(
+                imageVector = Icons.AutoMirrored.Default.KeyboardArrowRight,
+                contentDescription = null,
+                tint = Color(0xFF9190a3),
+                modifier = Modifier
+                    .padding(end = 16.dp)
+                    .size(36.dp)
+            )
+        }
     }
 }
 
@@ -189,96 +255,105 @@ fun CompletedListHead(
     )
 
 
-    HorizontalDivider(modifier = modifier.padding(horizontal = 16.dp))
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(start = 4.dp, end = 4.dp)
-            .clickable(onClick = { onExpandClick() })
-    ) {
-        Icon(
-            painter = painterResource(R.drawable.ic_tasks_completed_task),
-            contentDescription = null,
+    Column(modifier = modifier) {
+        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+        Row(
             modifier = Modifier
-                .align(Alignment.CenterVertically)
-                .size(42.dp)
-                .padding(start = 4.dp),
-            tint = Color(0xFF2EC14D)
-        )
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .padding(top = 8.dp, bottom = 8.dp, start = 8.dp)
+                .fillMaxWidth()
+                .padding(start = 4.dp, end = 4.dp)
+                .clickable(onClick = { onExpandClick() })
         ) {
-            Text(
-                text = "Завершенные",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = Color(0xFF050810),
-                modifier = Modifier.padding(bottom = 2.dp)
+            Icon(
+                painter = painterResource(R.drawable.ic_tasks_completed_task),
+                contentDescription = null,
+                modifier = Modifier
+                    .align(Alignment.CenterVertically)
+                    .size(42.dp)
+                    .padding(start = 4.dp),
+                tint = Color(0xFF2EC14D)
             )
-            Text(text = size, fontSize = 16.sp, color = Color(0xFF9c9aa6))
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(top = 8.dp, bottom = 8.dp, start = 8.dp)
+            ) {
+                Text(
+                    text = "Завершенные",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color(0xFF050810),
+                    modifier = Modifier.padding(bottom = 2.dp)
+                )
+                Text(text = size, fontSize = 16.sp, color = Color(0xFF9c9aa6))
+            }
+            Icon(
+                imageVector = Icons.Default.KeyboardArrowDown,
+                contentDescription = null,
+                tint = Color(0xFF8e8d9e),
+                modifier = Modifier
+                    .align(Alignment.CenterVertically)
+                    .padding(end = 16.dp)
+                    .size(36.dp)
+                    .rotate(rotation)
+            )
         }
-        Icon(
-            imageVector = Icons.Default.KeyboardArrowDown,
-            contentDescription = null,
-            tint = Color(0xFF8e8d9e),
-            modifier = Modifier
-                .align(Alignment.CenterVertically)
-                .padding(end = 16.dp)
-                .size(36.dp)
-                .rotate(rotation)
-        )
     }
 }
 
 @Composable
-fun UncompletedListHead(size: String, isExpanded: Boolean, onClickExpand: () -> Unit) {
+fun UncompletedListHead(
+    size: String,
+    isExpanded: Boolean,
+    onClickExpand: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     val rotation by animateFloatAsState(
         targetValue = if (isExpanded) 180f else 0f
     )
 
 
-    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(start = 4.dp, end = 4.dp)
-            .clickable(onClick = onClickExpand)
-    ) {
-        Icon(
-            painter = painterResource(R.drawable.ic_circle_todos_list),
-            contentDescription = null,
+    Column(modifier = modifier) {
+        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+        Row(
             modifier = Modifier
-                .align(Alignment.CenterVertically)
-                .size(42.dp)
-                .padding(start = 4.dp),
-            tint = Color(0xFF8690ff)
-        )
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .padding(top = 8.dp, bottom = 8.dp, start = 8.dp)
+                .fillMaxWidth()
+                .padding(start = 4.dp, end = 4.dp)
+                .clickable(onClick = onClickExpand)
         ) {
-            Text(
-                text = "Активные",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = Color(0xFF050810),
-                modifier = Modifier.padding(bottom = 2.dp)
+            Icon(
+                painter = painterResource(R.drawable.ic_circle_todos_list),
+                contentDescription = null,
+                modifier = Modifier
+                    .align(Alignment.CenterVertically)
+                    .size(42.dp)
+                    .padding(start = 4.dp),
+                tint = Color(0xFF8690ff)
             )
-            Text(text = size, fontSize = 16.sp, color = Color(0xFF9c9aa6))
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(top = 8.dp, bottom = 8.dp, start = 8.dp)
+            ) {
+                Text(
+                    text = "Активные",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color(0xFF050810),
+                    modifier = Modifier.padding(bottom = 2.dp)
+                )
+                Text(text = size, fontSize = 16.sp, color = Color(0xFF9c9aa6))
+            }
+            Icon(
+                imageVector = Icons.Default.KeyboardArrowDown,
+                contentDescription = null,
+                tint = Color(0xFF8e8d9e),
+                modifier = Modifier
+                    .align(Alignment.CenterVertically)
+                    .padding(end = 16.dp)
+                    .size(36.dp)
+                    .rotate(rotation)
+            )
         }
-        Icon(
-            imageVector = Icons.Default.KeyboardArrowDown,
-            contentDescription = null,
-            tint = Color(0xFF8e8d9e),
-            modifier = Modifier
-                .align(Alignment.CenterVertically)
-                .padding(end = 16.dp)
-                .size(36.dp)
-                .rotate(rotation)
-        )
     }
 }
 
@@ -289,40 +364,43 @@ fun UnCompletedTaskItem(
     onEvent: (TodoListUIEvent) -> Unit,
     onAction: (TodoListScreenAction) -> Unit
 ) {
-    HorizontalDivider(modifier = modifier.padding(horizontal = 16.dp))
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(top = 8.dp, bottom = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            painter = painterResource(R.drawable.ic_circle_todos_list),
-            contentDescription = null,
-            tint = Color(0xFFd0cbf7),
+    Column(modifier = modifier) {
+        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+        Row(
             modifier = Modifier
-                .padding(start = 16.dp)
-                .size(36.dp)
-                .clickable(onClick = { onEvent(TodoListUIEvent.ChangeItemStatus(item.id)) })
-        )
-        Text(
-            text = item.title,
-            fontWeight = FontWeight.SemiBold,
-            color = Color(0xFF131826),
-            modifier = Modifier
-                .weight(1f)
-                .padding(start = 8.dp)
-                .clickable(onClick = { onAction(TodoListScreenAction.OnOpenTask(item.id)) })
-        )
-        Icon(
-            imageVector = Icons.AutoMirrored.Default.KeyboardArrowRight,
-            contentDescription = null,
-            tint = Color(0xFF9190a3),
-            modifier = Modifier
-                .padding(end = 16.dp)
-                .size(36.dp)
-                .clickable(onClick = { onAction(TodoListScreenAction.OnOpenTask(item.id)) })
-        )
+                .fillMaxWidth()
+                .padding(top = 8.dp, bottom = 8.dp)
+                .background(Color(0xFFFFFFFF)),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_circle_todos_list),
+                contentDescription = null,
+                tint = Color(0xFFd0cbf7),
+                modifier = Modifier
+                    .padding(start = 16.dp)
+                    .size(36.dp)
+                    .clickable(onClick = { onEvent(TodoListUIEvent.ChangeItemStatus(item.id)) })
+            )
+            Text(
+                text = item.title,
+                fontWeight = FontWeight.SemiBold,
+                color = Color(0xFF131826),
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = 8.dp)
+                    .clickable(onClick = { onAction(TodoListScreenAction.OnOpenTask(item.id)) })
+            )
+            Icon(
+                imageVector = Icons.AutoMirrored.Default.KeyboardArrowRight,
+                contentDescription = null,
+                tint = Color(0xFF9190a3),
+                modifier = Modifier
+                    .padding(end = 16.dp)
+                    .size(36.dp)
+                    .clickable(onClick = { onAction(TodoListScreenAction.OnOpenTask(item.id)) })
+            )
+        }
     }
 }
 

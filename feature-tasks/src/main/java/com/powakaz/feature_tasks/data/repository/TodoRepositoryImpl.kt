@@ -66,6 +66,8 @@ class TodoRepositoryImpl @Inject constructor(
 
 
     override suspend fun deleteTodoItem(entityId: String): NetworkResult<Response> {
+        todoDao.deleteById(entityId)
+
         return safeApiCall {
             api.deleteTodoItem(
                 DeleteTodoItemRequestBody(
