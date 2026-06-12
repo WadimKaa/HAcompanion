@@ -3,6 +3,7 @@ package com.powakaz.feature_tasks.data.repository
 import android.util.Log
 import com.powakaz.core_network.model.NetworkResult
 import com.powakaz.core_network.utils.safeApiCall
+import com.powakaz.feature_tasks.data.local.TodoItemEntity
 import com.powakaz.feature_tasks.data.local.dao.TodoDao
 import com.powakaz.feature_tasks.data.mapper.toDomain
 import com.powakaz.feature_tasks.data.mapper.toEntity
@@ -59,6 +60,9 @@ class TodoRepositoryImpl @Inject constructor(
         entityName: String,
         listName: String
     ): NetworkResult<Response> {
+
+
+
         return safeApiCall {
             api.addTodoItem(AddItemBody(listName = listName, itemName = entityName)).toDomain()
         }
@@ -66,7 +70,7 @@ class TodoRepositoryImpl @Inject constructor(
 
 
     override suspend fun deleteTodoItem(entityId: String): NetworkResult<Response> {
-        todoDao.deleteById(entityId)
+        todoDao.markAsDeleted(entityId)
 
         return safeApiCall {
             api.deleteTodoItem(
