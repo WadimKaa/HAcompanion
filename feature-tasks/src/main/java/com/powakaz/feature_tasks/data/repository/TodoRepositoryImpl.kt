@@ -1,8 +1,15 @@
 package com.powakaz.feature_tasks.data.repository
 
+import android.content.Context
 import android.util.Log
+import androidx.work.Constraints
+import androidx.work.ExistingWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
 import com.powakaz.core_network.model.NetworkResult
 import com.powakaz.core_network.utils.safeApiCall
+import com.powakaz.feature_tasks.data.local.SyncStatus
 import com.powakaz.feature_tasks.data.local.TodoItemEntity
 import com.powakaz.feature_tasks.data.local.dao.TodoDao
 import com.powakaz.feature_tasks.data.mapper.toDomain
@@ -13,17 +20,34 @@ import com.powakaz.feature_tasks.data.remote.model.change_status_item.ChangeStat
 import com.powakaz.feature_tasks.data.remote.model.delete_item.DeleteTodoItemRequestBody
 import com.powakaz.feature_tasks.data.remote.model.get_items.GetItemsBody
 import com.powakaz.feature_tasks.data.remote.model.update_todo_item.UpdateTodoItemBody
+import com.powakaz.feature_tasks.data.worker.TodoSyncWorker
 import com.powakaz.feature_tasks.domain.model.Response
 import com.powakaz.feature_tasks.domain.model.TodoItem
 import com.powakaz.feature_tasks.domain.repository.TodoRepository
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import java.util.UUID
 import javax.inject.Inject
 
 class TodoRepositoryImpl @Inject constructor(
     private val api: NetworkTodoListApi,
-    private val todoDao: TodoDao
+    private val todoDao: TodoDao,
+    @ApplicationContext private val context: Context
 ) : TodoRepository {
+
+
+    private fun triggerSync() {
+        val workRequest = OneTimeWorkRequestBuilder<TodoSyncWorker>()
+            .setConstraints(
+                Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
+            )
+            .build()
+
+
+        WorkManager.getInstance(context)
+            .enqueueUniqueWork("todo_sync", ExistingWorkPolicy.REPLACE, workRequest)
+    }
 
 
     override fun observeTodoItems(): Flow<List<TodoItem>> {
@@ -44,15 +68,8 @@ class TodoRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getTodoItems(): NetworkResult<List<TodoItem>> {
-        return safeApiCall {
-            val response = api.getTodoItems(GetItemsBody("todo.moi_dela"))
-
-            response.serviceResponseDto.myTasksDto.items.map {
-                it.toDomain()
-            }
-        }
-
+    override suspend fun getTodoItem(id : String): TodoItem {
+        return todoDao.getTodoItem(id).toDomain()
     }
 
 
@@ -60,27 +77,24 @@ class TodoRepositoryImpl @Inject constructor(
         entityName: String,
         listName: String
     ): NetworkResult<Response> {
+        todoDao.insertItem(
+            TodoItemEntity(
+                id = UUID.randomUUID().toString(),
+                title = entityName,
+                isCompleted = false,
+                syncStatus = SyncStatus.PENDING_INSERT,
+            )
+        )
 
-
-
-        return safeApiCall {
-            api.addTodoItem(AddItemBody(listName = listName, itemName = entityName)).toDomain()
-        }
+        triggerSync()
+        return NetworkResult.Success(Response(isSuccess = true))
     }
 
 
     override suspend fun deleteTodoItem(entityId: String): NetworkResult<Response> {
         todoDao.markAsDeleted(entityId)
-
-        return safeApiCall {
-            api.deleteTodoItem(
-                DeleteTodoItemRequestBody(
-                    itemId = entityId,
-                    listId = "todo.moi_dela"
-                )
-            ).toDomain()
-
-        }
+        triggerSync()
+        return NetworkResult.Success(data = Response(isSuccess = true))
     }
 
     override suspend fun changeStateTodoItem(

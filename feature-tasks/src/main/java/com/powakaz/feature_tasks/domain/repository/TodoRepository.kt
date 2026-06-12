@@ -6,7 +6,7 @@ import com.powakaz.feature_tasks.domain.model.TodoItem
 import kotlinx.coroutines.flow.Flow
 
 interface TodoRepository {
-    suspend fun getTodoItems(): NetworkResult<List<TodoItem>>
+    suspend fun getTodoItem(id : String): TodoItem
     suspend fun addTodoItem(entityName: String, listName: String): NetworkResult<Response>
     suspend fun deleteTodoItem(entityId: String): NetworkResult<Response>
     suspend fun changeStateTodoItem(entityId: String, isCompleted : Boolean): NetworkResult<Response>

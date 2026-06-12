@@ -5,6 +5,7 @@ import com.powakaz.feature_tasks.data.remote.model.add_item.InfoEntityDto
 import com.powakaz.feature_tasks.data.remote.model.get_items.TodoItemDto
 import com.powakaz.feature_tasks.domain.model.Response
 import com.powakaz.feature_tasks.domain.model.TodoItem
+import java.util.UUID
 
 fun TodoItemDto.toDomain(): TodoItem {
     return TodoItem(

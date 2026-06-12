@@ -75,7 +75,7 @@ class TodoSyncWorker @AssistedInject constructor(
                             val choiceItem = remoteItems.find { it.title == itemEntity.title }
 
                             if (choiceItem != null) {
-                                todoDao.updateRemoteId(choiceItem!!.id, choiceItem.title)
+                                todoDao.updateId(choiceItem!!.id, choiceItem.title)
                                 todoDao.markAsSynced(itemEntity.id)
                             } else {
                                 shouldRetry = true
@@ -93,7 +93,7 @@ class TodoSyncWorker @AssistedInject constructor(
                         networkApi.renameTodoItem(
                             UpdateTodoItemBody(
                                 listId = "todo.moi_dela",
-                                entityId = itemEntity.serverId!!,
+                                entityId = itemEntity.id,
                                 entityName = itemEntity.title
                             )
                         )
@@ -118,7 +118,7 @@ class TodoSyncWorker @AssistedInject constructor(
                         networkApi.changeStatusTodoItem(
                             ChangeStatusItemTodoBody(
                                 "todo.moi_dela",
-                                itemEntity.serverId!!,
+                                itemEntity.id,
                                 status
                             )
                         )
@@ -136,8 +136,10 @@ class TodoSyncWorker @AssistedInject constructor(
                 }
 
                 SyncStatus.PENDING_DELETE -> {
+                    val deleteTodoItemRequestBody = DeleteTodoItemRequestBody("todo.moi_dela", itemEntity.id)
+
                     val response = safeApiCall {
-                        networkApi.deleteTodoItem(DeleteTodoItemRequestBody("todo.moi_dela", itemEntity.serverId!!))
+                        networkApi.deleteTodoItem(deleteTodoItemRequestBody)
                     }
 
                     when(response){

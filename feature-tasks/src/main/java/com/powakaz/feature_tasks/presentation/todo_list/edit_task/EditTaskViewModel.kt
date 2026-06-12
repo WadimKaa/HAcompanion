@@ -1,18 +1,14 @@
 package com.powakaz.feature_tasks.presentation.todo_list.edit_task
 
 import android.util.Log
-import androidx.compose.ui.graphics.BlendMode.Companion.Screen
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.powakaz.core_network.model.NetworkResult
 import com.powakaz.feature_tasks.domain.model.TodoItem
-import com.powakaz.feature_tasks.domain.usecase.ChangeStateTodoItemUseCase
 import com.powakaz.feature_tasks.domain.usecase.GetTodoItemsUseCase
-import com.powakaz.feature_tasks.domain.usecase.ObserveItemById
 import com.powakaz.feature_tasks.domain.usecase.RenameTaskUseCase
-import com.powakaz.feature_tasks.presentation.todo_list.add_task.TaskUiState
 import com.powakaz.navigation_api.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,7 +24,7 @@ data class EditTaskUIState(
     val isTextFieldFocused: Boolean = false,
     val lengthTextLimit: Int = 100,
     val minLengthText: Int = 5,
-    val wasFocusedOnce: Boolean = false,
+    val wasFocusedOnce: Boolean = true,
     val isLoading: Boolean = false,
     val isCompleted: Boolean = false,
     val taskId: String = ""
@@ -51,7 +47,7 @@ sealed interface EditTaskUIEvent {
 class EditTaskViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     val renameTaskUseCase: RenameTaskUseCase,
-    val observeItemById: ObserveItemById
+    val getItemUseCase: GetTodoItemsUseCase
 ) :
     ViewModel() {
 
@@ -65,18 +61,16 @@ class EditTaskViewModel @Inject constructor(
 
     private fun loadTasksList() {
         viewModelScope.launch {
-            observeItemById(taskId).collect { item ->
-                item?.let {
-                    _uiState.update {
-                        it.copy(
-                            taskName = item.title,
-                            isTextFieldFocused = true,
-                            wasFocusedOnce = true,
-                            isCompleted = item.isCompleted,
-                            taskId = item.id
-                        )
-                    }
-                }
+            val item = getItemUseCase(taskId)
+
+            _uiState.update {
+                it.copy(
+                    taskName = item.title,
+                    isTextFieldFocused = true,
+                    wasFocusedOnce = true,
+                    isCompleted = item.isCompleted,
+                    taskId = item.id
+                )
             }
         }
     }

@@ -8,6 +8,7 @@ import androidx.room.Transaction
 import androidx.room.Update
 import com.powakaz.feature_tasks.data.local.SyncStatus
 import com.powakaz.feature_tasks.data.local.TodoItemEntity
+import com.powakaz.feature_tasks.domain.model.TodoItem
 import kotlinx.coroutines.flow.Flow
 
 
@@ -47,6 +48,14 @@ interface TodoDao {
     @Query("UPDATE todo_items SET syncStatus = 'SYNCED' WHERE id = :localId")
     suspend fun markAsSynced(localId: String)
 
+    @Query("SELECT * FROM todo_items WHERE syncStatus IN ('PENDING_INSERT', 'PENDING_GET_ID')")
+    suspend fun getItemsWaitingForId(): List<TodoItemEntity>
+
+    @Query("SELECT * FROM todo_items WHERE syncStatus = 'PENDING_DELETE'")
+    suspend fun getPendingDeletes(): List<TodoItemEntity>
+
+    @Query("DELETE FROM todo_items WHERE syncStatus = 'SYNCED' AND id NOT IN (:remainingIds)")
+    suspend fun deleteSyncedExcept(remainingIds: List<String>)
 
     @Transaction
     suspend fun clearAndInsert(items: List<TodoItemEntity>) {
@@ -55,10 +64,29 @@ interface TodoDao {
     }
 
     @Transaction
-    suspend fun syncItems(items: List<TodoItemEntity>) {
-        insertItems(items)
-        val ids = items.map { it.id }
-        deleteExcept(ids)
+    suspend fun syncItems(serverItems: List<TodoItemEntity>) {
+        val waitingForID = getItemsWaitingForId()
+        val pendingDeletes = getPendingDeletes()
+
+        val deletesIds = pendingDeletes.map { it.id }.toSet()
+        val deleteTitles = pendingDeletes.map { it.title }.toSet()
+
+        serverItems.forEach { serverItem ->
+            if (serverItem.id in deletesIds || serverItem.title in deleteTitles) {
+                return@forEach
+            }
+
+            val match = waitingForID.find { it.title == serverItem.title }
+            if (match != null) {
+                deleteById(match.id)
+            }
+
+
+            insertItem(serverItem)
+        }
+
+        val serverIds = serverItems.map { it.id }
+        deleteSyncedExcept(serverIds)
     }
 
     @Query("DELETE FROM todo_items")
@@ -70,11 +98,15 @@ interface TodoDao {
     @Query("UPDATE todo_items SET title = :title WHERE id = :id")
     suspend fun updateName(id: String, title: String)
 
-    @Query("UPDATE todo_items SET serverId = :serverId WHERE title = :title")
-    suspend fun updateRemoteId(serverId: String, title: String)
+    @Query("UPDATE todo_items SET id = :serverId WHERE title = :title")
+    suspend fun updateId(serverId: String, title: String)
 
 
     @Query("DELETE FROM todo_items WHERE id NOT IN (:remainingIds)")
     suspend fun deleteExcept(remainingIds: List<String>)
+
+
+    @Query("SELECT * FROM todo_items WHERE id = :id")
+    suspend fun getTodoItem(id: String): TodoItemEntity
 
 }

@@ -49,6 +49,10 @@ class TodoListViewModel @Inject constructor(
     private val _state = MutableStateFlow(TodoListState())
     val state = _state.asStateFlow()
 
+
+    // TODO: Долгое нажатие на удаление нескольких
+    // TODO: Переподгрузка рефрешем
+
     private fun refreshData() {
         viewModelScope.launch {
             // Просто пинаем сеть. Результат прилетит в collect выше сам через базу.

@@ -172,7 +172,7 @@ fun TaskContent(
 
 
                 ButtonOk(onClickButtonOk = {
-                    onEvent(TaskUiEvent.ClickOkButton)
+                    onAction(TaskScreenAction.OnBack)
                 })
             }
             AnimatedVisibility(
